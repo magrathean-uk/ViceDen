@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Users · ViceDen{% endblock %}
+
+{% block topbar_crumbs %}
+    <span>Home</span>
+    <span class="crumb-divider">/</span>
+    <span>Admin</span>
+    <span class="crumb-divider">/</span>
+    <span class="crumb-current">Users</span>
+{% endblock %}
+
+{% block content %}
+<section class="page-stack">
+    <section class="surface-box is-padded">
+        <div class="page-head">
+            <div class="page-head-copy">
+                <div class="page-head-kicker">Admin</div>
+                <h1 class="page-head-title">User management</h1>
+                <div class="page-head-note">Founder controls for finding users, wiping content, or deleting accounts.</div>
+            </div>
+            <div class="summary-strip">
+                <span class="badge-text">{{ users.len() }} users</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="surface-box">
+        <div class="surface-body">
+            <form class="compact-field" method="get" action="/admin/users">
+                <input type="search" name="q" value="{{ search }}" placeholder="Search users" />
+            </form>
+        </div>
+    </section>
+
+    <section class="surface-box">
+        <div class="surface-head">
+            <div class="surface-head-copy">
+                <h2 class="surface-head-title">Accounts</h2>
+                <p class="surface-head-note">{% if search != "" %}Filtered list{% else %}All visible accounts{% endif %}</p>
+            </div>
+        </div>
+
+        {% if users.is_empty() %}
+            <div class="surface-body">
+                <div class="empty-state">
+                    <h3>No users found.</h3>
+                    <p class="muted">Try a different search.</p>
+                </div>
+            </div>
+        {% else %}
+            <ul class="list-surface">
+                {% for user in users %}
+                    <li class="list-row">
+                        <div class="list-main">
+                            <a class="list-title" href="{{ user.profile_url }}">{{ user.handle }}</a>
+                            <div class="list-meta">
+                                <span>{{ user.role }}</span>
+                                <span class="dot">·</span>
+                                <span>{{ user.status }}</span>
+                                <span class="dot">·</span>
+                                <span>{{ user.thread_count }} threads</span>
+                                <span class="dot">·</span>
+                                <span>{{ user.post_count }} posts</span>
+                            </div>
+                        </div>
+
+                        {% if user.can_manage %}
+                            <div class="list-side">
+                                <form class="inline-form" method="post" action="/admin/users/{{ user.id }}/wipe">
+                                    <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                                    <button type="submit">Wipe</button>
+                                </form>
+                                <form class="inline-form" method="post" action="/admin/users/{{ user.id }}/delete">
+                                    <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                                    <button type="submit">Delete</button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

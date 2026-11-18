@@ -1,0 +1,13 @@
+[Unit]
+Description=ViceDen PostgreSQL compatibility wrapper
+After=postgresql@18-main.service
+Requires=postgresql@18-main.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/true
+ExecStop=/bin/true
+
+[Install]
+WantedBy=multi-user.target

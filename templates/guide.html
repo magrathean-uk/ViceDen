@@ -1,0 +1,181 @@
+{% extends "public-lite.html" %}
+
+{% block title %}Guide · ViceDen{% endblock %}
+
+{% block content %}
+<section class="public-stack">
+    <section class="public-panel">
+        <div class="public-head">
+            <div class="public-kicker">Guide</div>
+            <h1 class="public-title">Guide</h1>
+            <div class="public-note">Practical notes for search, boards, posting, accounts, and the JSON API beta.</div>
+        </div>
+        {% if show_welcome %}
+            <div class="public-card-copy">
+                Account ready. Read the rules, set your profile, and start slow.
+            </div>
+            {% if probation_until.is_some() %}
+                <div class="public-card-copy">
+                    New accounts can read now. New threads and replies open after <time class="local-datetime" data-utc="{{ probation_until.as_ref().unwrap().iso }}">{{ probation_until.as_ref().unwrap().display }}</time>.
+                </div>
+            {% endif %}
+        {% endif %}
+    </section>
+
+    <section class="public-grid">
+        <article class="public-card">
+            <h2>Search</h2>
+            <div class="public-card-copy">Press Enter in the top search box. Plain terms search titles, root posts, and replies. Add <code>: /slug</code> to scope the query to a board.</div>
+        </article>
+        <article class="public-card">
+            <h2>Boards and threads</h2>
+            <div class="public-card-copy">Board pages show 10 threads per page. Sorting supports <code>new</code>, <code>top</code>, <code>hot</code>, <code>active</code>, and <code>unanswered</code>. Duplicate titles inside one board are blocked server-side.</div>
+        </article>
+        <article class="public-card">
+            <h2>Replies and votes</h2>
+            <div class="public-card-copy">Reply from the thread footer. Recent activity links jump to exact post anchors. Vote buttons are sticky; pressing the same vote clears it. Downvotes depend on board settings.</div>
+        </article>
+        <article class="public-card">
+            <h2>Notifications</h2>
+            <div class="public-card-copy">Opening notifications marks the queue read. Items can be removed from the log without touching the underlying thread or post.</div>
+        </article>
+        <article class="public-card">
+            <h2>Account</h2>
+            <div class="public-card-copy">Registration creates a local session cookie and redirects to profile. Profile shows settings, PATs, subscriptions, saved threads, and your own recent threads.</div>
+        </article>
+        <article class="public-card">
+            <h2>Routes</h2>
+            <div class="public-card-copy">Web uses <code>/</code>, <code>/guide</code>, <code>/search</code>, <code>/b/{slug}</code>, <code>/t/{id}</code>, <code>/notifications</code>, and <code>/profile</code>. JSON lives under <code>/api</code>.</div>
+        </article>
+    </section>
+
+    <section class="public-panel public-stack">
+        <div class="public-card-title">API overview</div>
+        <div class="public-grid">
+            <article class="public-card">
+                <div class="public-card-title">Base path</div>
+                <div class="public-card-copy">All JSON endpoints live under <code>/api</code>. Web pages and forms do not share the same payload shapes as the API.</div>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">Authentication</div>
+                <div class="public-card-copy">API auth uses <code>x-api-token</code> or <code>Authorization: Bearer &lt;token&gt;</code>. Missing or invalid tokens stay anonymous and cannot write.</div>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">Content types</div>
+                <div class="public-card-copy">Reads are normal GET requests. Mutations use JSON request bodies for API routes and URL-encoded forms for web routes.</div>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">Failure shape</div>
+                <div class="public-card-copy">Most API errors return HTTP status plus a JSON body with an <code>error</code> string.</div>
+            </article>
+        </div>
+    </section>
+
+    <section class="public-panel public-stack">
+        <div class="public-card-title">API endpoints by feature</div>
+        <div class="public-card-copy">Founder PAT required for every API route here except <code>GET /api/healthz</code>.</div>
+        <div class="public-grid">
+            <article class="public-card">
+                <div class="public-card-title">Health and boards</div>
+                <div class="public-card-copy"><code>GET /api/healthz</code>, <code>GET /api/boards</code>, <code>GET /api/boards/{slug}/threads</code></div>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">Threads and posts</div>
+                <div class="public-card-copy"><code>POST /api/boards/{slug}/threads</code>, <code>GET /api/threads/{id}/posts</code>, <code>POST /api/threads/{id}/posts</code>, <code>POST /api/threads/{id}/hide</code>, <code>POST /api/threads/{id}/report</code>, <code>POST /api/posts/{id}/report</code></div>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">Search and notifications</div>
+                <div class="public-card-copy"><code>GET /api/search</code>, <code>GET /api/me/notifications</code>, <code>PATCH /api/me/notifications/{id}</code>, <code>POST /api/me/notifications/read-all</code></div>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">Profile and personalization</div>
+                <div class="public-card-copy"><code>GET /api/me</code>, <code>PATCH /api/me/settings</code>, <code>GET /api/me/pats</code>, <code>POST /api/me/pats</code>, <code>DELETE /api/me/pats/{id}</code></div>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">Founder moderation</div>
+                <div class="public-card-copy"><code>GET /api/admin/reports</code>, <code>PATCH /api/admin/reports/{id}</code>, <code>GET /api/admin/users</code>, <code>POST /api/admin/users/{id}/wipe</code>, <code>POST /api/admin/users/{id}/delete</code></div>
+            </article>
+        </div>
+    </section>
+
+    <section class="public-panel public-stack">
+        <div class="public-card-title">API examples</div>
+        <div class="public-grid">
+            <article class="public-card">
+                <div class="public-card-title">Health</div>
+                <pre><code>curl http://127.0.0.1:3000/api/healthz</code></pre>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">List boards</div>
+                <pre><code>curl http://127.0.0.1:3000/api/boards</code></pre>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">List threads in a board</div>
+                <pre><code>curl http://127.0.0.1:3000/api/boards/{slug}/threads</code></pre>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">Create a thread</div>
+                <pre><code>curl -X POST http://127.0.0.1:3000/api/boards/{slug}/threads \
+  -H 'Content-Type: application/json' \
+  -H 'x-api-token: vdn_example_token' \
+  -d '{
+    "title": "Rope scene debrief",
+    "body": "What went right and what I would change next time."
+  }'</code></pre>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">Reply to a thread</div>
+                <pre><code>curl -X POST http://127.0.0.1:3000/api/threads/{id}/posts \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer vdn_example_token' \
+  -d '{"body":"Follow-up reply body"}'</code></pre>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">Search</div>
+                <pre><code>curl --get \
+  --data-urlencode 'q=rope : /hobbies' \
+  --data-urlencode 'scope=all' \
+  http://127.0.0.1:3000/api/search</code></pre>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">Read notifications</div>
+                <pre><code>curl -H 'x-api-token: vdn_example_token' \
+  http://127.0.0.1:3000/api/me/notifications</code></pre>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">Mark one notification read</div>
+                <pre><code>curl -X PATCH http://127.0.0.1:3000/api/me/notifications/{id} \
+  -H 'Content-Type: application/json' \
+  -H 'x-api-token: vdn_example_token' \
+  -d '{"read":true}'</code></pre>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">Create a PAT</div>
+                <pre><code>curl -X POST http://127.0.0.1:3000/api/me/pats \
+  -H 'Content-Type: application/json' \
+  -H 'Authorization: Bearer vdn_example_token' \
+  -d '{"name":"cli"}'</code></pre>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">List founder reports</div>
+                <pre><code>curl -H 'Authorization: Bearer vdn_founder_token' \
+  http://127.0.0.1:3000/api/admin/reports</code></pre>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">Profile settings</div>
+                <pre><code>curl -X PATCH http://127.0.0.1:3000/api/me/settings \
+  -H 'Content-Type: application/json' \
+  -H 'x-api-token: vdn_example_token' \
+  -d '{
+    "compactness": -1,
+    "theme": "dark"
+  }'</code></pre>
+            </article>
+            <article class="public-card">
+                <div class="public-card-title">More detail</div>
+                <div class="public-card-copy">See <code>docs/07_api_v1_spec.md</code> and <code>docs/32_user_guide.md</code> for repo-level reference. The guide here is the practical quick-reference page.</div>
+            </article>
+        </div>
+    </section>
+</section>
+{% endblock %}

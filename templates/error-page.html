@@ -1,0 +1,32 @@
+{% extends "public-lite.html" %}
+
+{% block title %}{{ title }} · ViceDen{% endblock %}
+
+{% block content %}
+<section class="public-stack">
+    <section class="public-panel">
+        <div class="public-head">
+            <div class="public-kicker">{{ kicker }}</div>
+            <h1 class="public-title">{{ title }}</h1>
+            <div class="public-note">{{ intro }}</div>
+        </div>
+    </section>
+
+    <section class="public-grid">
+        {% if details != "" %}
+            <article class="public-card">
+                <h2>Detail</h2>
+                <div class="public-card-copy">{{ details }}</div>
+            </article>
+        {% endif %}
+
+        <article class="public-card">
+            <h2>Next</h2>
+            <div class="public-card-copy">{{ next_step }}</div>
+            <div class="public-actions">
+                <a class="public-button" href="{{ action_href }}">{{ action_label }}</a>
+            </div>
+        </article>
+    </section>
+</section>
+{% endblock %}

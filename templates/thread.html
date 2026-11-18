@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}{{ thread.title }} · ViceDen{% endblock %}
+
+{% block topbar_crumbs %}
+    <span>Home</span>
+    <span class="crumb-divider">/</span>
+    <span class="crumb-current">/{{ thread.board_slug }}</span>
+    <span class="crumb-divider">/</span>
+    <span>Thread</span>
+{% endblock %}
+
+{% block content %}
+<section class="thread-screen">
+    <section class="thread-hero">
+        <div class="thread-kicker">Thread</div>
+        <h1 class="thread-title">{{ thread.title }}</h1>
+        <div class="thread-meta">
+            <span>/{{ thread.board_slug }}</span>
+            <span class="thread-meta-dot">·</span>
+            <span>{{ thread_author }}</span>
+            <span class="thread-meta-dot">·</span>
+            <span><time class="local-datetime" data-utc="{{ thread_posted_at.iso }}" data-format="DD.MM.YY-HH:MM">{{ thread_posted_at.display }}</time></span>
+            <span class="thread-meta-dot">·</span>
+            <span>{{ reply_count }} replies</span>
+            <span class="thread-meta-dot">·</span>
+            <span>{{ participant_count }} people</span>
+        </div>
+        <div class="summary-strip">
+            <span class="badge-text">score {{ thread_score_text }}</span>
+            <span class="badge-text">{{ thread_delete_note }}</span>
+            {% if is_saved %}<span class="badge-text">saved</span>{% endif %}
+            {% if is_hidden %}<span class="badge-text">hidden</span>{% endif %}
+            {% if thread_state.pinned %}<span class="badge-text">pinned</span>{% endif %}
+            {% if thread_state.locked %}<span class="badge-text">locked</span>{% endif %}
+            {% if thread_state.answered %}<span class="badge-text">answered</span>{% endif %}
+            {% if thread_state.closed %}<span class="badge-text">closed</span>{% endif %}
+            {% for tag in thread_tags %}
+                <span class="badge-text">#{{ tag }}</span>
+            {% endfor %}
+        </div>
+        {% if chrome.current_user.is_authenticated %}
+            <div class="thread-actions">
+                <form class="inline-form" method="post" action="/t/{{ thread.id }}/save">
+                    <input class="hidden-input" type="hidden" name="return_to" value="/t/{{ thread.id }}" />
+                    <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                    <button class="action-compact" type="submit">{% if is_saved %}Unsave{% else %}Save{% endif %}</button>
+                </form>
+                <form class="inline-form" method="post" action="/t/{{ thread.id }}/hide">
+                    <input class="hidden-input" type="hidden" name="return_to" value="/" />
+                    <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                    <button class="action-compact" type="submit" aria-label="{% if is_hidden %}Unhide thread{% else %}Hide thread{% endif %}">{% if is_hidden %}Unhide{% else %}Hide{% endif %}</button>
+                </form>
+                <form class="inline-form" method="post" action="/t/{{ thread.id }}/report">
+                    <input class="hidden-input" type="hidden" name="reason" value="thread review needed" />
+                    <input class="hidden-input" type="hidden" name="details" value="reported from thread page" />
+                    <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                    <button class="action-compact" type="submit" aria-label="Report thread">Report</button>
+                </form>
+            </div>
+        {% endif %}
+    </section>
+
+    {% if moderation_state == "pending" %}
+        <div class="banner banner-pending">Your thread is under review. Only you and the founder can see it until the AI classifier confirms it's allowed.</div>
+    {% else if moderation_state == "quarantined" %}
+        <div class="banner banner-quarantined">Your thread is quarantined for founder review.</div>
+    {% else if moderation_state == "removed" %}
+        <div class="banner banner-removed">Your thread was removed because the AI classifier flagged it as not allowed.</div>
+    {% endif %}
+
+    <section class="entry-surface thread-surface">
+        <div class="entry-list thread-posts">
+            {% if posts.is_empty() %}
+                <div class="thread-composer">
+                    <div class="empty-state">
+                        <h3>Nothing here yet.</h3>
+                        <p class="muted">The thread exists, but there are no posts.</p>
+                    </div>
+                </div>
+            {% else %}
+                {% for post in posts %}
+                    <article class="entry-item thread-post" id="post-{{ post.id }}">
+                        <div class="entry-top thread-post-top">
+                            <div class="entry-meta thread-post-meta">
+                                <span class="entry-author thread-post-author">{{ post.author }}</span>
+                                {% if post.is_current_user %}<span class="entry-current thread-you">you</span>{% endif %}
+                                <span class="thread-meta-dot">·</span>
+                                <span>{% if post.score_hidden %}score hidden{% else %}score {{ post.score }}{% endif %}</span>
+                                <span class="thread-meta-dot">·</span>
+                                <span><time class="local-datetime" data-utc="{{ post.created_at.iso }}" data-format="DD.MM.YY-HH:MM">{{ post.created_at.display }}</time></span>
+                            </div>
+                        </div>
+
+                        <div class="entry-copy thread-post-copy">{{ post.body_html | safe }}</div>
+
+                        {% if chrome.current_user.is_authenticated %}
+                            <div class="entry-actions thread-post-actions">
+                                <form class="inline-form" method="post" action="/t/{{ thread.id }}/vote/{{ post.id }}">
+                                    <input class="hidden-input" type="hidden" name="value" value="1" />
+                                    <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                                    <button class="action-compact action-vote{% if post.user_vote == 1 %} vote-active{% endif %}" type="submit" aria-label="{% if post.user_vote == 1 %}Upvoted{% else %}Upvote{% endif %}" title="{% if post.user_vote == 1 %}Upvoted{% else %}Upvote{% endif %}" aria-pressed="{% if post.user_vote == 1 %}true{% else %}false{% endif %}">+</button>
+                                </form>
+                                {% if can_vote_down %}
+                                    <form class="inline-form" method="post" action="/t/{{ thread.id }}/vote/{{ post.id }}">
+                                        <input class="hidden-input" type="hidden" name="value" value="-1" />
+                                        <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                                        <button class="action-compact action-vote{% if post.user_vote == -1 %} vote-active{% endif %}" type="submit" aria-label="{% if post.user_vote == -1 %}Downvoted{% else %}Downvote{% endif %}" title="{% if post.user_vote == -1 %}Downvoted{% else %}Downvote{% endif %}" aria-pressed="{% if post.user_vote == -1 %}true{% else %}false{% endif %}">-</button>
+                                    </form>
+                                {% endif %}
+                                <form class="inline-form" method="post" action="/t/{{ thread.id }}/posts/{{ post.id }}/report">
+                                    <input class="hidden-input" type="hidden" name="reason" value="post review needed" />
+                                    <input class="hidden-input" type="hidden" name="details" value="reported from thread page" />
+                                    <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                                    <button class="action-compact" type="submit" aria-label="Report post">Report</button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="thread-composer">
+            <div class="thread-kicker">Reply</div>
+            <div class="thread-composer-copy">{{ posting_notice }}</div>
+
+            <div class="mention-row">
+                {% if thread_participants.is_empty() %}
+                    <span class="mention-chip">No mention targets yet</span>
+                {% else %}
+                    {% for handle in thread_participants %}
+                        <button type="button" data-user="{{ handle }}" class="mention-chip mention-insert">@{{ handle }}</button>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            {% if chrome.current_user.is_authenticated %}
+                <form class="form-grid" method="post" action="/t/{{ thread.id }}">
+                    <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                    <div class="mini-grid">
+                        <label for="body">Body</label>
+                        <textarea id="body" name="body" rows="5" data-preview-source="reply-preview" required></textarea>
+                    </div>
+                    <div class="composer-tools">
+                        <button type="button" class="button-link preview-toggle" data-preview-toggle="reply-preview">Preview</button>
+                        <div id="reply-preview" class="composer-preview" data-preview-output hidden></div>
+                    </div>
+                    <button class="thread-submit primary-button" type="submit">Post reply</button>
+                </form>
+            {% else %}
+                <div class="empty-state">
+                    <h3>Log in to reply.</h3>
+                    <p class="muted">Voting, reporting, saving, hiding, and replying all require a session.</p>
+                    <a class="button-link" href="/login">Login</a>
+                </div>
+            {% endif %}
+
+            <div id="thread-participant-data" hidden>{{ thread_participants_json }}</div>
+        </div>
+    </section>
+</section>
+
+{% endblock %}

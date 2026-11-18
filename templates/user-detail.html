@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}{{ detail_user.handle }} · User{% endblock %}
+
+{% block topbar_crumbs %}
+    <span>Home</span>
+    <span class="crumb-divider">/</span>
+    <span>Admin</span>
+    <span class="crumb-divider">/</span>
+    <span><a href="/admin/users">Users</a></span>
+    <span class="crumb-divider">/</span>
+    <span class="crumb-current">{{ detail_user.handle }}</span>
+{% endblock %}
+
+{% block content %}
+<section class="page-stack">
+    <section class="surface-box is-padded">
+        <div class="page-head">
+            <div class="page-head-copy">
+                <div class="page-head-kicker">User profile</div>
+                <h1 class="page-head-title">{{ detail_user.handle }}</h1>
+                <div class="page-head-note">
+                    {{ detail_user.role }} · {{ detail_user.status }} · {{ detail_user.thread_count }} threads · {{ detail_user.post_count }} posts
+                </div>
+                {% if probation_until.is_some() %}
+                    <div class="page-head-note">Probation until <time class="local-datetime" data-utc="{{ probation_until.as_ref().unwrap().iso }}">{{ probation_until.as_ref().unwrap().display }}</time></div>
+                {% endif %}
+                {% if deactivated_reason != "" %}
+                    <div class="page-head-note">Reason: {{ deactivated_reason }}</div>
+                {% endif %}
+            </div>
+
+            {% if detail_user.can_manage %}
+                <div class="page-head-actions">
+                    {% if probation_until.is_some() %}
+                        <form class="inline-form" method="post" action="/admin/users/{{ detail_user.id }}/lift-probation">
+                            <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                            <input class="hidden-input" type="hidden" name="return_to" value="/admin/users/{{ detail_user.id }}" />
+                            <input type="text" name="note" maxlength="120" placeholder="manual review cleared" />
+                            <button type="submit">Lift probation</button>
+                        </form>
+                    {% endif %}
+                    <form class="inline-form" method="post" action="/admin/users/{{ detail_user.id }}/cauterise">
+                        <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                        <input type="text" name="reason" maxlength="120" placeholder="invite leak / spam ring" />
+                        <button type="submit">Cauterise subtree</button>
+                    </form>
+                    <form class="inline-form" method="post" action="/admin/users/{{ detail_user.id }}/wipe">
+                        <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                        <input class="hidden-input" type="hidden" name="return_to" value="/admin/users/{{ detail_user.id }}" />
+                        <button type="submit">Wipe</button>
+                    </form>
+                    <form class="inline-form" method="post" action="/admin/users/{{ detail_user.id }}/delete">
+                        <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                        <input class="hidden-input" type="hidden" name="return_to" value="/admin/users" />
+                        <button type="submit">Delete</button>
+                    </form>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="page-layout">
+        <section class="surface-box">
+            <div class="surface-head">
+                <div class="surface-head-copy">
+                    <h2 class="surface-head-title">Invite subtree</h2>
+                    <p class="surface-head-note">{{ subtree_descendant_count }} downstream account{% if subtree_descendant_count != 1 %}s{% endif %} · {{ subtree_active_invites }} active invite code{% if subtree_active_invites != 1 %}s{% endif %}</p>
+                </div>
+            </div>
+            <div class="surface-body">
+                <p class="muted">Cauterise blocks subtree accounts, removes their content, and revokes unused invites.</p>
+                {% if subtree_handles.is_empty() %}
+                    <div class="empty-state">
+                        <h3>No downstream accounts.</h3>
+                        <p class="muted">This user has not grown an invite tree yet.</p>
+                    </div>
+                {% else %}
+                    <div class="item-grid">
+                        {% for handle in subtree_handles %}
+                            <article class="item-card">
+                                <div class="list-title">{{ handle }}</div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="surface-box">
+            <div class="surface-head">
+                <div class="surface-head-copy">
+                    <h2 class="surface-head-title">Moderation history</h2>
+                    <p class="surface-head-note">Founder actions already taken on this account.</p>
+                </div>
+            </div>
+            <div class="surface-body">
+                {% if moderation_history.is_empty() %}
+                    <div class="empty-state">
+                        <h3>No actions yet.</h3>
+                        <p class="muted">No recorded moderation trail here.</p>
+                    </div>
+                {% else %}
+                    <div class="item-grid">
+                        {% for item in moderation_history %}
+                            <article class="item-card">
+                                <strong>{{ item.action }}</strong>
+                                <div class="item-meta">
+                                    <span>{{ item.actor }}</span>
+                                    <span class="dot">·</span>
+                                    <span>{{ item.reason }}</span>
+                                    <span class="dot">·</span>
+                                    <span><time class="local-datetime" data-utc="{{ item.created_at.iso }}">{{ item.created_at.display }}</time></span>
+                                </div>
+                                {% if item.note != "" %}
+                                    <div class="list-copy">{{ item.note }}</div>
+                                {% endif %}
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="surface-box">
+            <div class="surface-head">
+                <div class="surface-head-copy">
+                    <h2 class="surface-head-title">Started threads</h2>
+                    <p class="surface-head-note">Threads created by this user.</p>
+                </div>
+            </div>
+            <div class="surface-body">
+                {% if user_threads.is_empty() %}
+                    <div class="empty-state">
+                        <h3>No threads.</h3>
+                        <p class="muted">No thread history here.</p>
+                    </div>
+                {% else %}
+                    <div class="item-grid">
+                        {% for item in user_threads %}
+                            <article class="item-card">
+                                <a class="list-title" href="/t/{{ item.thread_id }}">{{ item.title }}</a>
+                                <div class="item-meta">
+                                    <span>/{{ item.board_slug }}</span>
+                                    <span class="dot">·</span>
+                                    <span><time class="local-datetime" data-utc="{{ item.last_activity.iso }}">{{ item.last_activity.display }}</time></span>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="surface-box">
+            <div class="surface-head">
+                <div class="surface-head-copy">
+                    <h2 class="surface-head-title">Recent posts</h2>
+                    <p class="surface-head-note">Latest visible activity from this user.</p>
+                </div>
+            </div>
+            <div class="surface-body">
+                {% if user_posts.is_empty() %}
+                    <div class="empty-state">
+                        <h3>No posts.</h3>
+                        <p class="muted">No post history here.</p>
+                    </div>
+                {% else %}
+                    <div class="item-grid">
+                        {% for item in user_posts %}
+                            <article class="item-card">
+                                <a class="list-title" href="{{ item.url }}">{{ item.thread_title }}</a>
+                                <div class="item-meta">
+                                    <span>/{{ item.board_slug }}</span>
+                                    <span class="dot">·</span>
+                                    <span><time class="local-datetime" data-utc="{{ item.created_at.iso }}">{{ item.created_at.display }}</time></span>
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    </section>
+</section>
+{% endblock %}

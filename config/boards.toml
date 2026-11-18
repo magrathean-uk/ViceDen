@@ -1,0 +1,79 @@
+## Board configuration for the ViceDen forum.
+##
+# Each `[[boards]]` entry defines a top level board.  The `slug` must be
+# unique and URL safe (lowercase letters, numbers, hyphens or underscores).
+# The `name` is shown in the UI.  `ttl_days` is the age after which a thread
+# and its posts are purged by the cleanup routine.  `description` explains what
+# the board is for and may contain Markdown.
+
+[[boards]]
+slug = "general"
+name = "General"
+ttl_days = 180
+description = "General discussion and community news."
+
+[[boards]]
+slug = "hobbies"
+name = "Hobbies"
+ttl_days = 180
+description = "Games, crafts, music, sport and other pastimes."
+
+[[boards]]
+slug = "careers"
+name = "Careers"
+ttl_days = 180
+description = "Work, job hunting, workplace culture and professional development."
+
+[[boards]]
+slug = "wellbeing"
+name = "Wellbeing"
+ttl_days = 180
+description = "Health, sleep, exercise and mental wellbeing.  No medical advice."
+
+[[boards]]
+slug = "stories"
+name = "Stories"
+ttl_days = 180
+description = "Short fiction, personal logs and writing feedback.  AI-generated content should be clearly labelled."
+
+[[boards]]
+slug = "relationships"
+name = "Relationships"
+ttl_days = 180
+description = "Friends, family, partners and the dynamics between them."
+
+[[boards]]
+slug = "meetups"
+name = "Meetups"
+ttl_days = 180
+description = "Organising and discussing local events and get-togethers.  No personal info dumps."
+
+[[boards]]
+slug = "anonymous"
+name = "Anonymous"
+ttl_days = 180
+description = "Anonymous posts and reflections.  Posts expire automatically.  No identifying details."
+
+[[boards]]
+slug = "setbacks"
+name = "Setbacks"
+ttl_days = 180
+description = "Talking through failures, lessons learned and recovering from bad days."
+
+[[boards]]
+slug = "mindfulness"
+name = "Mindfulness"
+ttl_days = 180
+description = "Meditation, relaxation techniques and focus practice."
+
+[[boards]]
+slug = "projects"
+name = "Projects"
+ttl_days = 180
+description = "Show and discuss personal, open-source and creative projects."
+
+[[boards]]
+slug = "debate"
+name = "Debate"
+ttl_days = 180
+description = "Civil debate on contested topics, kept respectful and on topic."

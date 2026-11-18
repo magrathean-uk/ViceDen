@@ -1,0 +1,13 @@
+{% extends "auth-base.html" %}
+
+{% block title %}Slow down{% endblock %}
+
+{% block auth_content %}
+<section class="auth-card">
+    <div class="auth-stack">
+        <div class="auth-kicker">429</div>
+        <h1 class="auth-title">Slow down.</h1>
+        <p class="auth-copy">You've hit the rate limit for this action. Try again in a moment.</p>
+    </div>
+</section>
+{% endblock %}

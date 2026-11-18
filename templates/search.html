@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Search · ViceDen{% endblock %}
+
+{% block topbar_crumbs %}
+    <span>Home</span>
+    <span class="crumb-divider">/</span>
+    <span class="crumb-current">Search</span>
+{% endblock %}
+
+{% block content %}
+<section class="page-stack">
+    <section class="surface-box is-padded">
+        <div class="page-head">
+            <div class="page-head-copy">
+                <div class="page-head-kicker">Search</div>
+                <h1 class="page-head-title">Search the pit</h1>
+                <div class="page-head-note">Press Enter to search. Use <code>tag:safety</code>, <code>author:root</code>, or <code>privacy : /general</code>.</div>
+            </div>
+            <div class="summary-strip">
+                <span class="badge-text">{{ result_count }} results</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="surface-box">
+        <div class="surface-body">
+            <form class="form-grid" method="get" action="/search">
+                <div class="split-two">
+                    <div class="mini-grid">
+                        <label for="q">Query</label>
+                        <input type="search" id="q" name="q" value="{{ query }}" placeholder="Search terms. Add : /general to scope" />
+                    </div>
+                    <div class="mini-grid">
+                        <label for="scope">Scope</label>
+                        <select id="scope" name="scope">
+                            <option value="all"{% if scope == "all" %} selected{% endif %}>Threads and posts</option>
+                            <option value="threads"{% if scope == "threads" %} selected{% endif %}>Threads only</option>
+                            <option value="posts"{% if scope == "posts" %} selected{% endif %}>Posts only</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+            {% if active_filters.is_empty() %}
+            {% else %}
+                <div class="mini-grid">
+                    <label>Active filters</label>
+                    <div class="summary-strip">
+                        {% for filter in active_filters %}
+                            <span class="badge-text">{{ filter.label }} {{ filter.value }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="surface-box">
+        <div class="surface-head">
+            <div class="surface-head-copy">
+                <h2 class="surface-head-title">Results</h2>
+                <p class="surface-head-note">Titles, root posts, and replies.</p>
+            </div>
+            <div class="surface-count">{{ result_count }} total</div>
+        </div>
+
+        {% if results.is_empty() %}
+            <div class="surface-body">
+                <div class="empty-state">
+                    <h3>No results.</h3>
+                    <p class="muted">Try a shorter query or a different scope.</p>
+                </div>
+            </div>
+        {% else %}
+            <ul class="list-surface">
+                {% for item in results %}
+                    <li class="list-row">
+                        <div class="list-main">
+                            <a class="list-title" href="{{ item.url }}">{{ item.thread_title }}</a>
+                            <div class="list-meta">
+                                <span>{{ item.kind }}</span>
+                                <span class="dot">·</span>
+                                <span>{{ item.board_name }} /{{ item.board_slug }}</span>
+                                <span class="dot">·</span>
+                                <span>{{ item.author }}</span>
+                                <span class="dot">·</span>
+                                <span>score {{ item.score }}</span>
+                                <span class="dot">·</span>
+                                <span><time class="local-datetime" data-utc="{{ item.created_at.iso }}">{{ item.created_at.display }}</time></span>
+                            </div>
+                            <div class="list-copy">{{ item.preview }}</div>
+                            {% if item.tags.is_empty() %}
+                            {% else %}
+                                <div class="summary-strip">
+                                    {% for tag in item.tags %}
+                                        <span class="badge-text">#{{ tag }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            {% if item.is_saved %}
+                                <div class="summary-strip">
+                                    <span class="badge-text">saved</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="list-side">
+                            <a class="button-link" href="{{ item.url }}">{{ item.open_label }}</a>
+                            <form class="inline-form" method="post" action="/t/{{ item.thread_id }}/save">
+                                <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                                <input class="hidden-input" type="hidden" name="return_to" value="{{ item.return_to }}" />
+                                <button type="submit">{% if item.is_saved %}Unsave{% else %}Save{% endif %}</button>
+                            </form>
+                            <form class="inline-form" method="post" action="/t/{{ item.thread_id }}/hide">
+                                <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                                <input class="hidden-input" type="hidden" name="return_to" value="{{ item.return_to }}" />
+                                <button type="submit">Hide</button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

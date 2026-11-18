@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Audit · ViceDen{% endblock %}
+
+{% block topbar_crumbs %}
+    <span>Home</span>
+    <span class="crumb-divider">/</span>
+    <span>Admin</span>
+    <span class="crumb-divider">/</span>
+    <span class="crumb-current">Audit</span>
+{% endblock %}
+
+{% block content %}
+<section class="page-stack">
+    <section class="surface-box is-padded">
+        <div class="page-head">
+            <div class="page-head-copy">
+                <div class="page-head-kicker">Admin</div>
+                <h1 class="page-head-title">Moderation audit</h1>
+                <div class="page-head-note">Founder action stream with actor, target, and time filters.</div>
+            </div>
+            <div class="summary-strip">
+                <span class="badge-text">{{ event_count }} events</span>
+            </div>
+        </div>
+        <form class="form-grid" method="get" action="/admin/moderation-events">
+            <label>Action
+                <input type="text" name="action" value="{{ current_action }}" placeholder="remove_thread" />
+            </label>
+            <label>Moderator
+                <input type="text" name="moderator" value="{{ current_moderator }}" placeholder="root" />
+            </label>
+            <label>Target user
+                <input type="text" name="target" value="{{ current_target }}" placeholder="handle" />
+            </label>
+            <label>Report id
+                <input type="text" name="report_id" value="{{ current_report_id }}" placeholder="uuid" />
+            </label>
+            <label>Since
+                <input type="date" name="since" value="{{ current_since }}" />
+            </label>
+            <label>Until
+                <input type="date" name="until" value="{{ current_until }}" />
+            </label>
+            <label>Limit
+                <select name="limit">
+                    <option value="25" {% if current_limit == 25 %}selected{% endif %}>25</option>
+                    <option value="50" {% if current_limit == 50 %}selected{% endif %}>50</option>
+                    <option value="100" {% if current_limit == 100 %}selected{% endif %}>100</option>
+                    <option value="250" {% if current_limit == 250 %}selected{% endif %}>250</option>
+                    <option value="500" {% if current_limit == 500 %}selected{% endif %}>500</option>
+                </select>
+            </label>
+            <div class="summary-strip">
+                <button type="submit">Filter</button>
+                <a class="button-link" href="/admin/moderation-events">Reset</a>
+                <a class="button-link" href="{{ csv_export_url }}">CSV</a>
+            </div>
+        </form>
+    </section>
+
+    <section class="surface-box">
+        <div class="surface-head">
+            <div class="surface-head-copy">
+                <h2 class="surface-head-title">Events</h2>
+                <p class="surface-head-note">Newest first.</p>
+            </div>
+        </div>
+        {% if items.is_empty() %}
+            <div class="surface-body">
+                <div class="empty-state">
+                    <h3>Nothing here.</h3>
+                    <p class="muted">No audit rows match.</p>
+                </div>
+            </div>
+        {% else %}
+            <ul class="list-surface">
+                {% for item in items %}
+                    <li class="list-row">
+                        <div class="list-main">
+                            <div class="summary-strip">
+                                <span class="list-title">{{ item.action }}</span>
+                                <span class="badge-text">{{ item.actor }}</span>
+                                {% if item.target_user != "" %}
+                                    <span class="badge-text">{{ item.target_user }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="list-meta">
+                                <span><time class="local-datetime" data-utc="{{ item.created_at.iso }}">{{ item.created_at.display }}</time></span>
+                                {% if item.report_id != "" %}
+                                    <span class="dot">·</span>
+                                    <span>report {{ item.report_id }}</span>
+                                {% endif %}
+                                {% if item.target_thread_id != "" %}
+                                    <span class="dot">·</span>
+                                    <span>thread {{ item.target_thread_id }}</span>
+                                {% endif %}
+                                {% if item.target_post_id != "" %}
+                                    <span class="dot">·</span>
+                                    <span>post {{ item.target_post_id }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="list-copy">{{ item.reason }}</div>
+                            {% if item.note != "" %}
+                                <div class="list-copy">{{ item.note }}</div>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

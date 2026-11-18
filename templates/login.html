@@ -1,0 +1,28 @@
+{% extends "auth-base.html" %}
+
+{% block title %}ID{% endblock %}
+
+{% block auth_content %}
+<div class="identity-card">
+    <form class="form-grid bare-login" method="post" action="/login">
+        <input class="hidden-input" type="hidden" name="return_to" value="{{ return_to }}" />
+        <input class="hidden-input" type="hidden" name="csrf" value="{{ csrf_token }}" />
+
+        <div class="mini-grid">
+            <label for="handle">ID</label>
+            <input type="text" id="handle" name="handle" minlength="3" maxlength="24" autocomplete="username" required autofocus />
+        </div>
+
+        <div class="mini-grid">
+            <label for="password">pass</label>
+            <input type="password" id="password" name="password" autocomplete="current-password" required />
+        </div>
+
+        {% if error != "" %}
+            <div class="auth-error">{{ error }}</div>
+        {% endif %}
+
+        <button type="submit">enter</button>
+    </form>
+</div>
+{% endblock %}

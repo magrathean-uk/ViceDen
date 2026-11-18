@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}ViceDen · home{% endblock %}
+
+{% block inspector_recent %}
+    <section class="rail-section">
+        <div class="rail-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+            <span>Recent activity</span>
+        </div>
+        {% if chrome.recent_posts.is_empty() %}
+            <div class="rail-empty">Nothing recent</div>
+        {% else %}
+            <div class="rail-list">
+                {% for item in chrome.recent_posts %}
+                    {% if loop.index <= 4 %}
+                        <a class="rail-item" href="{{ item.url }}">
+                            <div class="rail-item-title">{{ item.thread_title }}</div>
+                            <div class="rail-item-meta">
+                                <span>/{{ item.board_slug }}</span>
+                                <span class="dot">·</span>
+                                <span><time class="local-datetime" data-utc="{{ item.created_at.iso }}">{{ item.created_at.display }}</time></span>
+                            </div>
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}
+
+{% block content %}
+<section class="home-screen">
+    <section class="home-hero">
+        <div class="home-hero-copy">
+            <div class="home-kicker">Front page</div>
+            <h1 class="home-title">{{ front_page_title }}</h1>
+            <p class="home-meta">{{ front_page_subtitle }}</p>
+            <div class="summary-strip">
+                <span class="badge-text">{{ board_cards.len() }} boards</span>
+                <span class="badge-text">{{ front_page_threads.len() }} threads</span>
+                <span class="badge-text">{{ feed }}</span>
+            </div>
+        </div>
+
+        <div class="home-feed-toggle">
+            <a class="{% if feed == "all" %}is-active{% endif %}" href="/?feed=all">All</a>
+            {% if chrome.current_user.is_authenticated %}
+                <a class="{% if feed == "subscribed" %}is-active{% endif %}" href="/?feed=subscribed">Subscribed</a>
+            {% endif %}
+        </div>
+    </section>
+
+    <div class="home-board-ribbon">
+        {% for board in board_cards %}
+            {% if loop.index <= 8 %}
+                <a href="/b/{{ board.slug }}">
+                    <span>/{{ board.slug }}</span>
+                    {% if board.subscribed %}<span>subscribed</span>{% endif %}
+                </a>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <section class="feed-surface home-feed">
+        <div class="feed-head">
+            <div class="feed-head-copy">
+                <h2>Current threads</h2>
+                <p>One reading surface. Same compact forum rhythm.</p>
+            </div>
+            <div class="feed-count">{{ front_page_threads.len() }} visible</div>
+        </div>
+
+        {% if front_page_threads.is_empty() %}
+            <div class="home-empty">
+                <div class="empty-state">
+                    <h3>No threads matched this view.</h3>
+                    <p class="muted">Try another feed or jump into a board.</p>
+                </div>
+            </div>
+        {% else %}
+            <ul class="feed-list">
+                {% for item in front_page_threads %}
+                    <li class="feed-row with-score">
+                        <div class="feed-score">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s3 3 3 6a3 3 0 0 1-6 0c0-1.4.8-2.7 1.7-3.8"/><path d="M8.5 12.5A4.5 4.5 0 1 0 16 16c0-2.6-2-4.3-3.1-5.4"/></svg>
+                            <div class="feed-score-value">{% if item.score_hidden %}0{% else %}{{ item.score }}{% endif %}</div>
+                        </div>
+
+                        <div class="feed-main">
+                            <a class="feed-title" href="/t/{{ item.thread_id }}">{{ item.title }}</a>
+                            <div class="feed-meta">
+                                <span>/{{ item.board_slug }}</span>
+                                <span class="dot">·</span>
+                                <span>{{ item.author }}</span>
+                                <span class="dot">·</span>
+                                <span>{{ item.reply_count }} replies</span>
+                                <span class="dot">·</span>
+                                <span><time class="local-datetime" data-utc="{{ item.last_activity.iso }}">{{ item.last_activity.display }}</time></span>
+                            </div>
+                            <div class="feed-copy">{{ item.snippet }}</div>
+                            <div class="feed-flags">
+                                {% if item.authored_by_current_user %}<span class="feed-flag is-primary">you</span>{% endif %}
+                                {% if item.is_saved %}<span class="feed-flag">saved</span>{% endif %}
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

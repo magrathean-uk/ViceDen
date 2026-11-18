@@ -1,0 +1,21 @@
+[Unit]
+Description=ViceDen Deploy Poll
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+Environment=GITHUB_REPOSITORY=magrathean-uk/ViceDen
+Environment=RELEASE_TAG=deploy-main
+Environment=DEPLOY_SCRIPT=/opt/sites/viceden/deploy.sh
+Environment=DEPLOY_STATE_FILE=/opt/sites/viceden/runtime/last_release
+EnvironmentFile=/etc/viceden-deploy.env
+ExecStart=/usr/bin/python3 /opt/sites/viceden/scripts/poll_release.py
+SyslogIdentifier=viceden-deploy
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=full
+ReadWritePaths=/opt/sites/viceden /etc/systemd/system /run/systemd

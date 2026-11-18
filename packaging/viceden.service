@@ -1,0 +1,29 @@
+[Unit]
+Description=ViceDen forum
+After=network-online.target viceden-postgres.service
+Wants=network-online.target
+Requires=viceden-postgres.service
+
+[Service]
+Type=simple
+User=viceden
+Group=viceden
+WorkingDirectory=/opt/sites/viceden/runtime/current
+EnvironmentFile=/etc/default/viceden
+ExecStart=/opt/sites/viceden/runtime/current/bin/viceden
+Restart=on-failure
+RestartSec=3
+SyslogIdentifier=viceden
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+RestrictSUIDSGID=true
+UMask=0077
+ReadWritePaths=/opt/sites/viceden/data /opt/sites/viceden/logs
+
+[Install]
+WantedBy=multi-user.target

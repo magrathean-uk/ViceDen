@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Hidden · ViceDen{% endblock %}
+{% block content %}
+<section class="page-stack">
+    <section class="surface-box is-padded">
+        <div class="page-head">
+            <div class="page-head-copy">
+                <div class="page-head-kicker">Hidden</div>
+                <h1 class="page-head-title">Hidden threads</h1>
+                <div class="page-head-note">Quiet them on the feed. Bring them back when they matter again.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="surface-box">
+    {% if items.is_empty() %}
+        <div class="surface-body">
+            <div class="empty-state">
+                <h3>Nothing hidden.</h3>
+                <p class="muted">Use hide on noisy threads you do not want in the main feed.</p>
+            </div>
+        </div>
+    {% else %}
+        <ul class="list-surface">
+        {% for item in items %}
+            <li class="list-row">
+                <div class="list-main">
+                    <div class="list-meta">
+                        <span>/{{ item.board_slug }}</span>
+                    </div>
+                    <a class="list-title" href="/t/{{ item.thread_id }}">{{ item.title }}</a>
+                </div>
+                <div class="list-side">
+                    <form class="inline-form" method="post" action="/t/{{ item.thread_id }}/hide">
+                        <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                        <input class="hidden-input" type="hidden" name="return_to" value="/hidden" />
+                        <button type="submit">Unhide</button>
+                    </form>
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    </section>
+</section>
+{% endblock %}

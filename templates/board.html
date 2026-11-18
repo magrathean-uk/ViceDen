@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}{{ board.name }} · ViceDen{% endblock %}
+
+{% block topbar_crumbs %}
+    <span>Home</span>
+    <span class="crumb-divider">/</span>
+    <span class="crumb-current">/{{ board.slug }}</span>
+{% endblock %}
+
+{% block inspector_recent %}
+    <section class="rail-section">
+        <div class="rail-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+            <span>Recent activity</span>
+        </div>
+        <div class="rail-list">
+            {% for item in threads %}
+                {% if loop.index > 1 %}
+                    {% if loop.index <= 4 %}
+                        <a class="rail-item" href="/t/{{ item.thread_id }}">
+                            <div class="rail-item-title">{{ item.title }}</div>
+                            <div class="rail-item-meta">
+                                <span>{{ item.author }}</span>
+                                <span class="dot">·</span>
+                                <span><time class="local-datetime" data-utc="{{ item.last_activity.iso }}">{{ item.last_activity.display }}</time></span>
+                            </div>
+                        </a>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}
+
+{% block content %}
+<section class="board-screen">
+    <section class="board-header">
+        <div class="board-heading">
+            <div class="board-heading-label">Board</div>
+            <h1>/{{ board.slug }}</h1>
+        </div>
+
+        <div class="board-actions">
+            <form class="inline-form" method="post" action="/b/{{ board.slug }}/subscription">
+                <input class="hidden-input" type="hidden" name="return_to" value="/b/{{ board.slug }}?sort={{ sort }}" />
+                <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                <button class="ghost-button" type="submit">{% if subscribed %}Unsubscribe{% else %}Subscribe{% endif %}</button>
+            </form>
+            <a class="primary-button" href="#new-thread-form">Start a thread</a>
+        </div>
+    </section>
+
+    <section class="compose-drawer" id="new-thread-form">
+        <div class="compose-panel">
+            <div class="compose-head">
+                <div>
+                    <div class="eyebrow">Start a thread</div>
+                    <h2>New thread in /{{ board.slug }}</h2>
+                </div>
+                <a class="button-link" href="/b/{{ board.slug }}">Close</a>
+            </div>
+
+            <div class="compose-copy">
+                Keep it sharp. Clear title. Clear opener.
+            </div>
+
+            <form class="compose-form" method="post" action="/b/{{ board.slug }}">
+                <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                <div class="mini-grid">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" name="title" maxlength="64" placeholder="Thread title" required />
+                </div>
+
+                <div class="mini-grid">
+                    <label for="body">First post</label>
+                    <textarea id="body" name="body" rows="8" placeholder="Write the opener..." required></textarea>
+                </div>
+
+                <div class="mini-grid">
+                    <label for="tags">Tags</label>
+                    <input type="text" id="tags" name="tags" maxlength="96" placeholder="safety, advice, resources" />
+                </div>
+
+                <div class="compose-actions">
+                    <a class="button-link" href="/b/{{ board.slug }}">Cancel</a>
+                    <button class="thread-submit primary-button" type="submit">Publish thread</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <div class="board-tabs-row">
+        <nav class="board-tabs" aria-label="Board sorts">
+            <a class="board-tab{% if sort == "new" %} is-active{% endif %}" href="/b/{{ board.slug }}?sort=new">New</a>
+            <a class="board-tab{% if sort == "top" %} is-active{% endif %}" href="/b/{{ board.slug }}?sort=top">Top</a>
+            <a class="board-tab{% if sort == "hot" %} is-active{% endif %}" href="/b/{{ board.slug }}?sort=hot">Hot</a>
+            <a class="board-tab{% if sort == "active" %} is-active{% endif %}" href="/b/{{ board.slug }}?sort=active">Active</a>
+            <a class="board-tab{% if sort == "unanswered" %} is-active{% endif %}" href="/b/{{ board.slug }}?sort=unanswered">Unanswered</a>
+        </nav>
+
+        <div class="board-filter">
+            <span>{% if sort == "top" %}Top{% elif sort == "hot" %}Hot{% elif sort == "active" %}Active{% elif sort == "unanswered" %}Unanswered{% else %}Recent{% endif %}</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+    </div>
+
+    {% if threads.is_empty() %}
+        <div class="board-empty">
+            <div class="empty-state">
+                <h3>No threads here yet.</h3>
+                <p class="muted">Start the first one.</p>
+            </div>
+        </div>
+    {% else %}
+        <ul class="board-list">
+            {% for item in threads %}
+                <li>
+                    <article class="thread board-row feed-row with-side">
+                    <div class="board-score feed-score">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s3 3 3 6a3 3 0 0 1-6 0c0-1.4.8-2.7 1.7-3.8"/><path d="M8.5 12.5A4.5 4.5 0 1 0 16 16c0-2.6-2-4.3-3.1-5.4"/></svg>
+                        <div class="board-score-value feed-score-value">{% if item.score_hidden %}0{% else %}{{ item.score }}{% endif %}</div>
+                    </div>
+
+                    <div class="board-main feed-main">
+                        <div class="board-title-line feed-title-line">
+                            <a class="board-title feed-title" href="/t/{{ item.thread_id }}">{{ item.title }}</a>
+                            {% if loop.first %}
+                                {% if page == 1 %}
+                                    <span class="thread-pill is-amber">Pinned</span>
+                                {% endif %}
+                            {% endif %}
+                            {% if item.authored_by_current_user %}
+                                <span class="thread-pill is-primary">You</span>
+                            {% endif %}
+                            {% if item.thread_state.pinned %}<span class="thread-pill is-amber">Pinned</span>{% endif %}
+                            {% if item.thread_state.locked %}<span class="thread-pill">Locked</span>{% endif %}
+                            {% if item.thread_state.answered %}<span class="thread-pill">Answered</span>{% endif %}
+                            {% for tag in item.tags %}
+                                <span class="thread-pill">#{{ tag }}</span>
+                            {% endfor %}
+                            {% if item.reply_count >= 12 %}
+                                {% if loop.first %}
+                                {% else %}
+                                    <span class="thread-pill is-amber">Hot</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+
+                        <div class="board-meta thread-meta feed-meta">
+                            <span class="board-meta-author">{{ item.author }}</span>
+                            <span class="board-meta-dot">·</span>
+                            <span class="board-meta-item">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                <span>{{ item.reply_count }}</span>
+                            </span>
+                            <span class="board-meta-dot">·</span>
+                            <span><time class="local-datetime" data-utc="{{ item.last_activity.iso }}">{{ item.last_activity.display }}</time></span>
+                        </div>
+                    </div>
+
+                    <div class="board-row-side feed-side">
+                        <a class="bookmark-button feed-bookmark{% if item.is_saved %} is-saved{% endif %}" href="/t/{{ item.thread_id }}" aria-label="View">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21 12 17 5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                        </a>
+                    </div>
+                    </article>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <div class="board-pagination">
+        <div class="board-pagination-copy">page {{ page }} / {{ page_count }}</div>
+
+        <div class="board-pagination-actions">
+            {% if page > 1 %}
+                <a class="button-link pagination-link" href="/b/{{ board.slug }}?sort={{ sort }}&page={{ page - 1 }}">← Previous</a>
+            {% else %}
+                <span class="button-link pagination-link is-disabled">← Previous</span>
+            {% endif %}
+
+            {% if page < page_count %}
+                <a class="primary-button pagination-link" href="/b/{{ board.slug }}?sort={{ sort }}&page={{ page + 1 }}">Next →</a>
+            {% else %}
+                <span class="button-link pagination-link is-disabled">Next →</span>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

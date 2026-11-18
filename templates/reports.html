@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{% block title %}Reports · ViceDen{% endblock %}
+
+{% block topbar_crumbs %}
+    <span>Home</span>
+    <span class="crumb-divider">/</span>
+    <span>Admin</span>
+    <span class="crumb-divider">/</span>
+    <span class="crumb-current">Reports</span>
+{% endblock %}
+
+{% block content %}
+<section class="page-stack">
+    <section class="surface-box is-padded">
+        <div class="page-head">
+            <div class="page-head-copy">
+                <div class="page-head-kicker">Admin</div>
+                <h1 class="page-head-title">Reports</h1>
+                <div class="page-head-note">
+                    {% if current_status == "resolved" %}
+                        Founder review history with audit trail.
+                    {% else %}
+                        Founder safety desk for queue triage, removal, and auditable review notes.
+                    {% endif %}
+                </div>
+            </div>
+            <div class="summary-strip">
+                <span class="badge-text">{{ urgent_count }} urgent</span>
+                <span class="badge-text">{{ normal_count }} normal</span>
+            </div>
+        </div>
+        <form class="form-grid" method="get" action="/admin/reports">
+            <label>View
+                <select name="status">
+                    <option value="open" {% if current_status == "open" %}selected{% endif %}>open</option>
+                    <option value="resolved" {% if current_status == "resolved" %}selected{% endif %}>resolved</option>
+                </select>
+            </label>
+            <label>Desk state
+                <select name="queue_state">
+                    <option value="" {% if current_queue_state == "" %}selected{% endif %}>all</option>
+                    <option value="new" {% if current_queue_state == "new" %}selected{% endif %}>new</option>
+                    <option value="reviewing" {% if current_queue_state == "reviewing" %}selected{% endif %}>reviewing</option>
+                    <option value="waiting" {% if current_queue_state == "waiting" %}selected{% endif %}>waiting</option>
+                </select>
+            </label>
+            <label>Assignee
+                <select name="assigned">
+                    <option value="" {% if current_assigned == "" %}selected{% endif %}>all</option>
+                    <option value="me" {% if current_assigned == "me" %}selected{% endif %}>me</option>
+                    <option value="unassigned" {% if current_assigned == "unassigned" %}selected{% endif %}>unassigned</option>
+                </select>
+            </label>
+            <label>Priority
+                <select name="priority">
+                    <option value="" {% if current_priority == "" %}selected{% endif %}>all</option>
+                    <option value="urgent" {% if current_priority == "urgent" %}selected{% endif %}>urgent</option>
+                    <option value="elevated" {% if current_priority == "elevated" %}selected{% endif %}>elevated</option>
+                    <option value="normal" {% if current_priority == "normal" %}selected{% endif %}>normal</option>
+                </select>
+            </label>
+            <label>Action
+                <input type="text" name="action" value="{{ current_action }}" placeholder="remove_thread" />
+            </label>
+            <label>Moderator
+                <input type="text" name="moderator" value="{{ current_moderator }}" placeholder="root" />
+            </label>
+            <label>Since
+                <input type="date" name="since" value="{{ current_since }}" />
+            </label>
+            <label>Until
+                <input type="date" name="until" value="{{ current_until }}" />
+            </label>
+            <div class="summary-strip">
+                <button type="submit">Filter</button>
+                <a class="button-link" href="/admin/reports">Reset</a>
+                <a class="button-link" href="{{ csv_export_url }}">Audit CSV</a>
+            </div>
+        </form>
+    </section>
+
+    <section class="surface-box">
+        <div class="surface-head">
+            <div class="surface-head-copy">
+                <h2 class="surface-head-title">Urgent</h2>
+                <p class="surface-head-note">High-risk reports first.</p>
+            </div>
+        </div>
+        {% if urgent_reports.is_empty() %}
+            <div class="surface-body">
+                <div class="empty-state">
+                    <h3>Nothing here.</h3>
+                    <p class="muted">Queue clear.</p>
+                </div>
+            </div>
+        {% else %}
+            <ul class="list-surface">
+                {% for item in urgent_reports %}
+                    <li class="list-row">
+                        <div class="list-main">
+                            <div class="summary-strip">
+                                <span class="list-title">{{ item.reason }}</span>
+                                <span class="badge-text">{{ item.priority_label }}</span>
+                                <span class="badge-text">{{ item.target_kind }}</span>
+                            </div>
+                            <div class="list-meta">
+                                <span>{{ item.actor }}</span>
+                                {% if item.target_author.is_some() %}
+                                    <span class="dot">·</span>
+                                    <span>{{ item.target_author.as_ref().unwrap() }}</span>
+                                {% endif %}
+                                <span class="dot">·</span>
+                                <span>{{ item.queue_state }}</span>
+                                {% if item.assigned_to.is_some() %}
+                                    <span class="dot">·</span>
+                                    <span>Assigned to {{ item.assigned_to.as_ref().unwrap() }}</span>
+                                {% endif %}
+                                <span class="dot">·</span>
+                                <span><time class="local-datetime" data-utc="{{ item.created_at.iso }}">{{ item.created_at.display }}</time></span>
+                            </div>
+                            {% if item.details != "" %}
+                                <div class="list-copy">{{ item.details }}</div>
+                            {% endif %}
+                            {% if item.resolution_note != "" %}
+                                <div class="list-copy">Resolution note: {{ item.resolution_note }}</div>
+                            {% endif %}
+                            <div class="surface-box">
+                                <div class="surface-head">
+                                    <div class="surface-head-copy">
+                                        <h3 class="surface-head-title">Action history</h3>
+                                    </div>
+                                </div>
+                                <div class="surface-body">
+                                    {% if item.audit_history.is_empty() %}
+                                        <div class="empty-state">
+                                            <h3>No actions yet.</h3>
+                                        </div>
+                                    {% else %}
+                                        <div class="item-grid">
+                                            {% for audit in item.audit_history %}
+                                                <article class="item-card">
+                                                    <strong>{{ audit.action }}</strong>
+                                                    <div class="item-meta">
+                                                        <span>{{ audit.actor }}</span>
+                                                        <span class="dot">·</span>
+                                                        <span><time class="local-datetime" data-utc="{{ audit.created_at.iso }}">{{ audit.created_at.display }}</time></span>
+                                                    </div>
+                                                    {% if audit.note != "" %}
+                                                        <div class="list-copy">{{ audit.note }}</div>
+                                                    {% endif %}
+                                                </article>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="list-side">
+                            <form class="form-grid" method="post" action="/admin/reports/{{ item.id }}/triage">
+                                <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                                <input class="hidden-input" type="hidden" name="return_to" value="{{ return_to }}" />
+                                <label>Desk state
+                                    <select name="queue_state">
+                                        <option value="new" {% if item.queue_state == "new" %}selected{% endif %}>new</option>
+                                        <option value="reviewing" {% if item.queue_state == "reviewing" %}selected{% endif %}>reviewing</option>
+                                        <option value="waiting" {% if item.queue_state == "waiting" %}selected{% endif %}>waiting</option>
+                                    </select>
+                                </label>
+                                <label>Triage note
+                                    <textarea name="note" rows="2" placeholder="desk owner or next step"></textarea>
+                                </label>
+                                <div class="summary-strip">
+                                    <button type="submit">Update desk</button>
+                                    <button type="submit" name="claim" value="true">Claim me</button>
+                                    {% if item.assigned_to.is_some() %}
+                                        <button type="submit" name="release" value="true">Release</button>
+                                    {% endif %}
+                                </div>
+                            </form>
+                            <form class="form-grid" method="post" action="/admin/reports/{{ item.id }}/remove-target">
+                                <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                                <input class="hidden-input" type="hidden" name="return_to" value="{{ return_to }}" />
+                                <label>Resolution note
+                                    <textarea name="note" rows="3" placeholder="why this action happened"></textarea>
+                                </label>
+                                <button type="submit">Remove target</button>
+                            </form>
+                            <form class="form-grid" method="post" action="/admin/reports/{{ item.id }}/resolve">
+                                <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                                <input class="hidden-input" type="hidden" name="return_to" value="{{ return_to }}" />
+                                <input class="hidden-input" type="hidden" name="resolved" value="{% if item.resolved %}false{% else %}true{% endif %}" />
+                                <label>Resolution note
+                                    <textarea name="note" rows="3" placeholder="what you reviewed"></textarea>
+                                </label>
+                                <button type="submit">{% if item.resolved %}Reopen{% else %}Resolve{% endif %}</button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+
+    <section class="surface-box">
+        <div class="surface-head">
+            <div class="surface-head-copy">
+                <h2 class="surface-head-title">Normal</h2>
+                <p class="surface-head-note">Everything else still waiting for review.</p>
+            </div>
+        </div>
+        {% if normal_reports.is_empty() %}
+            <div class="surface-body">
+                <div class="empty-state">
+                    <h3>Nothing here.</h3>
+                    <p class="muted">Queue clear.</p>
+                </div>
+            </div>
+        {% else %}
+            <ul class="list-surface">
+                {% for item in normal_reports %}
+                    <li class="list-row">
+                        <div class="list-main">
+                            <div class="summary-strip">
+                                <span class="list-title">{{ item.reason }}</span>
+                                <span class="badge-text">{{ item.priority_label }}</span>
+                                <span class="badge-text">{{ item.target_kind }}</span>
+                            </div>
+                            <div class="list-meta">
+                                <span>{{ item.actor }}</span>
+                                {% if item.target_author.is_some() %}
+                                    <span class="dot">·</span>
+                                    <span>{{ item.target_author.as_ref().unwrap() }}</span>
+                                {% endif %}
+                                <span class="dot">·</span>
+                                <span>{{ item.queue_state }}</span>
+                                {% if item.assigned_to.is_some() %}
+                                    <span class="dot">·</span>
+                                    <span>Assigned to {{ item.assigned_to.as_ref().unwrap() }}</span>
+                                {% endif %}
+                                <span class="dot">·</span>
+                                <span><time class="local-datetime" data-utc="{{ item.created_at.iso }}">{{ item.created_at.display }}</time></span>
+                            </div>
+                            {% if item.details != "" %}
+                                <div class="list-copy">{{ item.details }}</div>
+                            {% endif %}
+                            {% if item.resolution_note != "" %}
+                                <div class="list-copy">Resolution note: {{ item.resolution_note }}</div>
+                            {% endif %}
+                            <div class="surface-box">
+                                <div class="surface-head">
+                                    <div class="surface-head-copy">
+                                        <h3 class="surface-head-title">Action history</h3>
+                                    </div>
+                                </div>
+                                <div class="surface-body">
+                                    {% if item.audit_history.is_empty() %}
+                                        <div class="empty-state">
+                                            <h3>No actions yet.</h3>
+                                        </div>
+                                    {% else %}
+                                        <div class="item-grid">
+                                            {% for audit in item.audit_history %}
+                                                <article class="item-card">
+                                                    <strong>{{ audit.action }}</strong>
+                                                    <div class="item-meta">
+                                                        <span>{{ audit.actor }}</span>
+                                                        <span class="dot">·</span>
+                                                        <span><time class="local-datetime" data-utc="{{ audit.created_at.iso }}">{{ audit.created_at.display }}</time></span>
+                                                    </div>
+                                                    {% if audit.note != "" %}
+                                                        <div class="list-copy">{{ audit.note }}</div>
+                                                    {% endif %}
+                                                </article>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="list-side">
+                            <form class="form-grid" method="post" action="/admin/reports/{{ item.id }}/triage">
+                                <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                                <input class="hidden-input" type="hidden" name="return_to" value="{{ return_to }}" />
+                                <label>Desk state
+                                    <select name="queue_state">
+                                        <option value="new" {% if item.queue_state == "new" %}selected{% endif %}>new</option>
+                                        <option value="reviewing" {% if item.queue_state == "reviewing" %}selected{% endif %}>reviewing</option>
+                                        <option value="waiting" {% if item.queue_state == "waiting" %}selected{% endif %}>waiting</option>
+                                    </select>
+                                </label>
+                                <label>Triage note
+                                    <textarea name="note" rows="2" placeholder="desk owner or next step"></textarea>
+                                </label>
+                                <div class="summary-strip">
+                                    <button type="submit">Update desk</button>
+                                    <button type="submit" name="claim" value="true">Claim me</button>
+                                    {% if item.assigned_to.is_some() %}
+                                        <button type="submit" name="release" value="true">Release</button>
+                                    {% endif %}
+                                </div>
+                            </form>
+                            <form class="form-grid" method="post" action="/admin/reports/{{ item.id }}/remove-target">
+                                <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                                <input class="hidden-input" type="hidden" name="return_to" value="{{ return_to }}" />
+                                <label>Resolution note
+                                    <textarea name="note" rows="3" placeholder="why this action happened"></textarea>
+                                </label>
+                                <button type="submit">Remove target</button>
+                            </form>
+                            <form class="form-grid" method="post" action="/admin/reports/{{ item.id }}/resolve">
+                                <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                                <input class="hidden-input" type="hidden" name="return_to" value="{{ return_to }}" />
+                                <input class="hidden-input" type="hidden" name="resolved" value="{% if item.resolved %}false{% else %}true{% endif %}" />
+                                <label>Resolution note
+                                    <textarea name="note" rows="3" placeholder="what you reviewed"></textarea>
+                                </label>
+                                <button type="submit">{% if item.resolved %}Reopen{% else %}Resolve{% endif %}</button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

@@ -1,0 +1,15 @@
+/target
+/fuzz/target
+/fuzz/corpus
+/fuzz/artifacts
+.env
+.DS_Store
+sqlx-data.json
+.idea
+.vscode
+.cargo/
+.opencode/
+opencode.json
+__pycache__/
+*.pyc
+.venv/

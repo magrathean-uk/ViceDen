@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Saved · ViceDen{% endblock %}
+{% block content %}
+<section class="page-stack">
+    <section class="surface-box is-padded">
+        <div class="page-head">
+            <div class="page-head-copy">
+                <div class="page-head-kicker">Saved</div>
+                <h1 class="page-head-title">Saved threads</h1>
+                <div class="page-head-note">Keep the short list here. Pull one back into rotation or clear it.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="surface-box">
+    {% if items.is_empty() %}
+        <div class="surface-body">
+            <div class="empty-state">
+                <h3>Nothing saved yet.</h3>
+                <p class="muted">Use save on threads worth keeping close.</p>
+            </div>
+        </div>
+    {% else %}
+        <ul class="list-surface">
+        {% for item in items %}
+            <li class="list-row">
+                <div class="list-main">
+                    <div class="list-meta">
+                        <span>/{{ item.board_slug }}</span>
+                    </div>
+                    <a class="list-title" href="/t/{{ item.thread_id }}">{{ item.title }}</a>
+                </div>
+                <div class="list-side">
+                    <form class="inline-form" method="post" action="/t/{{ item.thread_id }}/save">
+                        <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                        <input class="hidden-input" type="hidden" name="return_to" value="/saved" />
+                        <button type="submit">Unsave</button>
+                    </form>
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    </section>
+</section>
+{% endblock %}

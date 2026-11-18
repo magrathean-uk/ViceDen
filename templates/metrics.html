@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Metrics · ViceDen{% endblock %}
+
+{% block topbar_crumbs %}
+    <span>Home</span>
+    <span class="crumb-divider">/</span>
+    <span>Admin</span>
+    <span class="crumb-divider">/</span>
+    <span class="crumb-current">Metrics</span>
+{% endblock %}
+
+{% block content %}
+<section class="page-stack">
+    <section class="surface-box is-padded">
+        <div class="page-head">
+            <div class="page-head-copy">
+                <div class="page-head-kicker">Admin</div>
+                <h1 class="page-head-title">Forum metrics</h1>
+                <div class="page-head-note">Small health view for growth, reports, and queue pressure.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="surface-box">
+        <div class="surface-body">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Users</div>
+                    <div class="stat-value">{{ metrics.total_users }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Threads</div>
+                    <div class="stat-value">{{ metrics.total_threads }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Posts</div>
+                    <div class="stat-value">{{ metrics.total_posts }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Open reports</div>
+                    <div class="stat-value">{{ metrics.open_reports }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Unread notices</div>
+                    <div class="stat-value">{{ metrics.unresolved_notifications }}</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="surface-box">
+        <div class="surface-head">
+            <div class="surface-head-copy">
+                <h2 class="surface-head-title">Backup status</h2>
+                <p class="surface-head-note">Latest backup and latest verified restore marker.</p>
+            </div>
+        </div>
+        <div class="surface-body">
+            <div class="item-grid">
+                <article class="item-card">
+                    <strong>Status</strong>
+                    <div class="item-meta">
+                        <span>{{ backup.status }}</span>
+                        {% if backup.latest_backup_age_hours.is_some() %}
+                            <span class="dot">·</span>
+                            <span>{{ backup.latest_backup_age_hours.unwrap() }}h old</span>
+                        {% endif %}
+                    </div>
+                    {% if backup.backup_dir != "" %}
+                        <div class="list-copy">{{ backup.backup_dir }}</div>
+                    {% endif %}
+                </article>
+                <article class="item-card">
+                    <strong>Latest backup</strong>
+                    {% if backup.latest_backup_file != "" %}
+                        <div class="list-copy">{{ backup.latest_backup_file }}</div>
+                        {% if backup.latest_backup_at.is_some() %}
+                            <div class="item-meta">
+                                <span><time class="local-datetime" data-utc="{{ backup.latest_backup_at.as_ref().unwrap().iso }}">{{ backup.latest_backup_at.as_ref().unwrap().display }}</time></span>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="list-copy">No backup found.</div>
+                    {% endif %}
+                </article>
+                <article class="item-card">
+                    <strong>Latest verified restore</strong>
+                    {% if backup.latest_verified_file != "" %}
+                        <div class="list-copy">{{ backup.latest_verified_file }}</div>
+                        {% if backup.latest_verified_at.is_some() %}
+                            <div class="item-meta">
+                                <span><time class="local-datetime" data-utc="{{ backup.latest_verified_at.as_ref().unwrap().iso }}">{{ backup.latest_verified_at.as_ref().unwrap().display }}</time></span>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="list-copy">No verified marker found.</div>
+                    {% endif %}
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="surface-box">
+        <div class="surface-head">
+            <div class="surface-head-copy">
+                <h2 class="surface-head-title">Ingress status</h2>
+                <p class="surface-head-note">Cookie, proxy, and rate-limit config truth from runtime settings.</p>
+            </div>
+        </div>
+        <div class="surface-body">
+            <div class="item-grid">
+                <article class="item-card">
+                    <strong>Status</strong>
+                    <div class="item-meta">
+                        <span>{{ ingress.status }}</span>
+                        <span class="dot">·</span>
+                        <span>{{ ingress.trust_mode }}</span>
+                    </div>
+                </article>
+                <article class="item-card">
+                    <strong>Cookies and limits</strong>
+                    <div class="item-meta">
+                        <span>secure cookies {% if ingress.secure_cookies %}on{% else %}off{% endif %}</span>
+                        <span class="dot">·</span>
+                        <span>rate limit {% if ingress.rate_limit_disabled %}off{% else %}on{% endif %}</span>
+                    </div>
+                </article>
+                <article class="item-card">
+                    <strong>Trusted CIDRs</strong>
+                    <div class="list-copy">{{ ingress.trusted_cidrs }}</div>
+                </article>
+                <article class="item-card">
+                    <strong>Client IP headers</strong>
+                    <div class="list-copy">{{ ingress.client_ip_headers }}</div>
+                </article>
+            </div>
+        </div>
+    </section>
+</section>
+{% endblock %}

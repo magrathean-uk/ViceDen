@@ -1,0 +1,8 @@
+too-many-arguments-threshold = 8
+
+# clippy::result_large_err fires at >= this many bytes. The handlers and
+# extractors deliberately use axum's `Response` as their `Err` type (see the
+# `ResponseResult` alias), and `Response<Body>` is exactly 128 bytes on current
+# toolchains, so the previous value of 128 flagged every one of them. 192 keeps
+# the lint useful for genuinely oversized error types while allowing `Response`.
+large-error-threshold = 192

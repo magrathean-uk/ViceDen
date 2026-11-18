@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications · ViceDen{% endblock %}
+
+{% block topbar_crumbs %}
+    <span>Home</span>
+    <span class="crumb-divider">/</span>
+    <span class="crumb-current">Notifications</span>
+{% endblock %}
+
+{% block content %}
+<section class="page-stack">
+    <section class="surface-box is-padded">
+        <div class="page-head">
+            <div class="page-head-copy">
+                <div class="page-head-kicker">Notifications</div>
+                <h1 class="page-head-title">Notification log</h1>
+                <div class="page-head-note">Opening this page marks the queue as read. Unread items stay heavier until then.</div>
+            </div>
+            <div class="summary-strip">
+                <span class="badge-text">{{ chrome.notifications.len() }} queued</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="surface-box">
+        {% if chrome.notifications.is_empty() %}
+            <div class="surface-body">
+                <div class="empty-state">
+                    <h3>Nothing to show.</h3>
+                    <p class="muted">New mentions, replies, and moderation actions land here.</p>
+                </div>
+            </div>
+        {% else %}
+            <ul class="list-surface">
+                {% for item in chrome.notifications %}
+                    <li class="list-row notification-row{% if item.is_read %}{% else %} is-unread{% endif %}">
+                        <div class="notification-icon">
+                            {% if item.kind == "mention" %}
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M16.5 19.4A8 8 0 1 1 20 12v1a2.5 2.5 0 0 1-5 0v-1"/></svg>
+                            {% elif item.kind == "post removed" %}
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                            {% elif item.kind == "report" %}
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 6 5v6c0 5 2.8 8 6 10 3.2-2 6-5 6-10V5l-6-2z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                            {% elif item.kind == "moderation" %}
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 6 5v6c0 5 2.8 8 6 10 3.2-2 6-5 6-10V5l-6-2z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                            {% else %}
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"/><path d="M10 17a2 2 0 0 0 4 0"/></svg>
+                            {% endif %}
+                            {% if item.is_read %}{% else %}<span class="notification-dot"></span>{% endif %}
+                        </div>
+
+                        <div class="list-main">
+                            <div class="list-meta">
+                                <span class="list-title">{{ item.kind }}</span>
+                                <span class="dot">·</span>
+                                <span>{{ item.actor }}</span>
+                                <span class="dot">·</span>
+                                <span><time class="local-datetime" data-utc="{{ item.created_at.iso }}">{{ item.created_at.display }}</time></span>
+                            </div>
+                            <div class="list-copy">{{ item.thread_title }}</div>
+                            <div class="list-copy">{{ item.message }}</div>
+                        </div>
+
+                        <div class="list-side">
+                            {% if item.has_thread_link %}
+                                <a class="button-link" href="{{ item.thread_url }}">{{ item.target_label }}</a>
+                            {% endif %}
+                            <form class="inline-form" method="post" action="/notifications/{{ item.id }}/remove">
+                                <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                                <button type="submit">Remove</button>
+                            </form>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

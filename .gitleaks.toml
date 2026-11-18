@@ -1,0 +1,48 @@
+# gitleaks configuration for Viceden.
+#
+# Run: `gitleaks detect --source . --redact`
+#
+# Default rules from gitleaks ship enabled. Below are repo-specific
+# allowlists for documented false positives. Each entry justifies why
+# the pattern isn't a real leak.
+
+title = "Viceden gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Repo-wide allowlist for documented false positives."
+
+# Path-level allowlist: persistent runtime state and snapshot fixtures
+# never contain real secrets. PAT/session tokens stored there are
+# already hashed (Argon2/SHA-256 digests).
+paths = [
+    # Runtime state — bcrypt-style PAT/session digests, never plaintext.
+    '''data/forum_state\.json''',
+    # Lockfile — dependency hashes only.
+    '''Cargo\.lock''',
+    # cargo-deny / advisory ignore configs document RUSTSEC IDs that
+    # gitleaks heuristically matches as keys.
+    '''deny\.toml''',
+    # Tests deliberately use placeholder strings that mimic key shapes.
+    '''tests/.*\.rs''',
+]
+
+# Pattern-level allowlist for documentation placeholders.
+regexes = [
+    # `vdn_*_token` placeholder strings in user-guide curl snippets.
+    '''vdn_[a-z_]+_token''',
+    # `Authorization: Bearer <token>` literal placeholder in docs.
+    '''Authorization:\s*Bearer\s*<token>''',
+    # `Authorization: Bearer vdn_*_token` doc snippets.
+    '''Authorization:\s*Bearer\s*vdn_[a-z_]+_token''',
+]
+
+# Stopwords matched against secret context (variable names / line text).
+stopwords = [
+    "example",
+    "placeholder",
+    "fixture",
+    "test",
+]

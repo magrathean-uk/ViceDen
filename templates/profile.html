@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Profile · ViceDen{% endblock %}
+
+{% block topbar_crumbs %}
+    <span>Home</span>
+    <span class="crumb-divider">/</span>
+    <span class="crumb-current">Profile</span>
+{% endblock %}
+
+{% block content %}
+<section class="page-stack">
+    <section class="surface-box is-padded">
+        <div class="page-head">
+            <div class="page-head-copy">
+                <div class="profile-identity">
+                    <div class="profile-avatar">{{ chrome.current_user.handle }}</div>
+                    <div class="stack-tight">
+                        <div class="page-head-kicker">Profile</div>
+                        <h1 class="page-head-title">{{ chrome.current_user.handle }}</h1>
+                        <div class="page-head-note">@{{ chrome.current_user.handle }} · {{ chrome.current_user.role }} · dark theme</div>
+                        {% if probation_until.is_some() %}
+                            <div class="page-head-note">Probation active until <time class="local-datetime" data-utc="{{ probation_until.as_ref().unwrap().iso }}">{{ probation_until.as_ref().unwrap().display }}</time>. Reading is open. New threads and replies wait until this window ends.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="summary-strip">
+                <span class="badge-text">{{ own_thread_count }} threads</span>
+                <span class="badge-text">{{ own_post_count }} posts</span>
+                <span class="badge-text">{{ api_tokens.len() }} tokens</span>
+                <span class="badge-text">{{ saved_thread_items.len() }} saved</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-layout">
+        <div class="page-main">
+            <section class="surface-box">
+                <div class="surface-head">
+                    <div class="surface-head-copy">
+                        <h2 class="surface-head-title">Your threads</h2>
+                        <p class="surface-head-note">Recent threads started by this account.</p>
+                    </div>
+                </div>
+                <div class="surface-body">
+                    {% if own_threads.is_empty() %}
+                        <div class="empty-state">
+                            <h3>No threads yet.</h3>
+                            <p class="muted">Start one from any board.</p>
+                        </div>
+                    {% else %}
+                        <div class="item-grid">
+                            {% for item in own_threads %}
+                                <article class="item-card">
+                                    <a class="list-title" href="/t/{{ item.thread_id }}">{{ item.title }}</a>
+                                    <div class="item-meta">
+                                        <span>/{{ item.board_slug }}</span>
+                                        <span class="dot">·</span>
+                                        <span><time class="local-datetime" data-utc="{{ item.created_at.iso }}">{{ item.created_at.display }}</time></span>
+                                    </div>
+                                    <div class="list-copy">{{ item.snippet }}</div>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section class="surface-box">
+                <div class="surface-head">
+                    <div class="surface-head-copy">
+                        <h2 class="surface-head-title">API tokens</h2>
+                        <p class="surface-head-note">Create or revoke personal access tokens.</p>
+                    </div>
+                </div>
+                <div class="surface-body stack">
+                    <form class="form-grid" method="post" action="/profile/pats">
+                        <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                        <div class="mini-grid">
+                            <label for="pat-name">Token name</label>
+                            <input type="text" id="pat-name" name="name" maxlength="64" placeholder="Local script, backup, bot" required />
+                        </div>
+                        <div class="actions">
+                            <button class="primary-button" type="submit">Create token</button>
+                        </div>
+                    </form>
+
+                    {% if api_tokens.is_empty() %}
+                        <div class="empty-state">
+                            <h3>No tokens yet.</h3>
+                            <p class="muted">Create one when you need API access.</p>
+                        </div>
+                    {% else %}
+                        <div class="item-grid">
+                            {% for item in api_tokens %}
+                                <article class="item-card token-row">
+                                    <div class="token-copy">
+                                        <strong>{{ item.name }}</strong>
+                                        <span>{{ item.preview }}</span>
+                                        <span>Created <time class="local-datetime" data-utc="{{ item.created_at.iso }}">{{ item.created_at.display }}</time>{% if item.last_used_at.is_some() %} · used <time class="local-datetime" data-utc="{{ item.last_used_at.as_ref().unwrap().iso }}">{{ item.last_used_at.as_ref().unwrap().display }}</time>{% endif %}</span>
+                                    </div>
+                                    <form class="inline-form" method="post" action="/profile/pats/{{ item.id }}/delete">
+                                        <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                                        <input class="hidden-input" type="hidden" name="return_to" value="/profile" />
+                                        <button type="submit">Revoke</button>
+                                    </form>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+
+        <aside class="page-side">
+            <section class="surface-box">
+                <div class="surface-head">
+                    <div class="surface-head-copy">
+                        <h2 class="surface-head-title">Alerts</h2>
+                        <p class="surface-head-note">Choose what lands in your queue.</p>
+                    </div>
+                </div>
+                <div class="surface-body stack">
+                    <form class="item-card token-row" method="post" action="/profile">
+                        <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                        <div class="token-copy">
+                            <strong>Mentions</strong>
+                            <span>Direct @name pings in threads and replies.</span>
+                        </div>
+                        <button type="submit" name="notify_mentions" value="{% if notify_mentions %}false{% else %}true{% endif %}">
+                            {% if notify_mentions %}On{% else %}Off{% endif %}
+                        </button>
+                    </form>
+
+                    <form class="item-card token-row" method="post" action="/profile">
+                        <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                        <div class="token-copy">
+                            <strong>Replies</strong>
+                            <span>Replies and tag-follow thread alerts.</span>
+                        </div>
+                        <button type="submit" name="notify_replies" value="{% if notify_replies %}false{% else %}true{% endif %}">
+                            {% if notify_replies %}On{% else %}Off{% endif %}
+                        </button>
+                    </form>
+
+                    <form class="item-card token-row" method="post" action="/profile">
+                        <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                        <div class="token-copy">
+                            <strong>Moderation</strong>
+                            <span>Removal and moderation desk actions on your content.</span>
+                        </div>
+                        <button type="submit" name="notify_moderation" value="{% if notify_moderation %}false{% else %}true{% endif %}">
+                            {% if notify_moderation %}On{% else %}Off{% endif %}
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="surface-box">
+                <div class="surface-head">
+                    <div class="surface-head-copy">
+                        <h2 class="surface-head-title">Saved threads</h2>
+                        <p class="surface-head-note">Threads kept for later.</p>
+                    </div>
+                </div>
+                <div class="surface-body">
+                    {% if saved_thread_items.is_empty() %}
+                        <div class="empty-state">
+                            <h3>Nothing saved.</h3>
+                            <p class="muted">Use save on threads you want to keep.</p>
+                        </div>
+                    {% else %}
+                        <div class="item-grid">
+                            {% for item in saved_thread_items %}
+                                <article class="item-card">
+                                    <a class="list-title" href="/t/{{ item.thread_id }}">{{ item.title }}</a>
+                                    <div class="item-meta">
+                                        <span>/{{ item.board_slug }}</span>
+                                        <span class="dot">·</span>
+                                        <span>{{ item.reply_count }} replies</span>
+                                    </div>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+
+            <section class="surface-box">
+                <div class="surface-head">
+                    <div class="surface-head-copy">
+                        <h2 class="surface-head-title">Subscriptions</h2>
+                        <p class="surface-head-note">Boards followed by this account.</p>
+                    </div>
+                </div>
+                <div class="surface-body">
+                    {% if subscribed_board_cards.is_empty() %}
+                        <div class="empty-state">
+                            <h3>No subscriptions yet.</h3>
+                            <p class="muted">Subscribe from any board page.</p>
+                        </div>
+                    {% else %}
+                        <div class="item-grid">
+                            {% for item in subscribed_board_cards %}
+                                <article class="item-card profile-board-row">
+                                    <a class="list-title" href="/b/{{ item.slug }}">/{{ item.slug }}</a>
+                                    <span>{{ item.thread_count }} threads</span>
+                                </article>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </section>
+        </aside>
+    </section>
+</section>
+{% endblock %}

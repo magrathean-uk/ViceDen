@@ -1,0 +1,21 @@
+[package]
+name = "viceden-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+viceden = { path = ".." }
+
+[[bin]]
+name = "safe_html"
+path = "fuzz_targets/safe_html.rs"
+test = false
+doc = false
+bench = false
+
+[workspace]

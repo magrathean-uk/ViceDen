@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Invites · ViceDen{% endblock %}
+
+{% block topbar_crumbs %}
+    <span>Home</span>
+    <span class="crumb-divider">/</span>
+    <span>Admin</span>
+    <span class="crumb-divider">/</span>
+    <span class="crumb-current">Invites</span>
+{% endblock %}
+
+{% block content %}
+<section class="page-stack">
+    <section class="surface-box is-padded">
+        <div class="page-head">
+            <div class="page-head-copy">
+                <div class="page-head-kicker">Admin</div>
+                <h1 class="page-head-title">Invites</h1>
+                <div class="page-head-note">Issue beta invite codes and revoke compromised ones. Only invites you created are listed.</div>
+            </div>
+            <div class="summary-strip">
+                <span class="badge-text">{{ invites.len() }} issued</span>
+                <span class="badge-text">{{ active_invites }}/{{ active_limit }} active</span>
+                {% if high_risk_active_invites > 0 %}
+                    <span class="badge-text">{{ high_risk_active_invites }} high risk active</span>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    {% if flash != "" %}
+        <section class="surface-box">
+            <div class="surface-body">
+                <div class="banner">{{ flash }}</div>
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="surface-box">
+        <div class="surface-body">
+            <form method="post" action="/admin/invites" class="form-grid">
+                <input type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                <label>Note (optional)
+                    <input type="text" name="note" maxlength="120" />
+                </label>
+                <label>Max redemptions
+                    <input type="number" name="max_redemptions" min="1" max="100" value="1" />
+                </label>
+                <div class="muted">{{ active_limit }} active invite codes max per founder.</div>
+                {% if high_risk_active_invites > 0 %}
+                    <div class="muted">High-risk active codes must be revoked or contained before new issue.</div>
+                {% endif %}
+                <button type="submit">Issue invite</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="surface-box">
+        {% if invites.is_empty() %}
+            <div class="surface-body">
+                <div class="empty-state">
+                    <h3>No invites yet.</h3>
+                    <p class="muted">Use the form above to mint your first code.</p>
+                </div>
+            </div>
+        {% else %}
+            <div class="surface-body">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Risk</th>
+                            <th>Used</th>
+                            <th>Redeemed by</th>
+                            <th>Tree</th>
+                            <th>Impact</th>
+                            <th>Expires</th>
+                            <th>Note</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invite in invites %}
+                            <tr class="{% if invite.revoked %}is-revoked{% endif %}">
+                                <td><code>{{ invite.code }}</code></td>
+                                <td>
+                                    <div>{{ invite.risk_label }}</div>
+                                    <div class="muted">{{ invite.risk_reason }}</div>
+                                </td>
+                                <td>{{ invite.redemptions }}</td>
+                                <td>{{ invite.redeemed_by }}</td>
+                                <td>{% if invite.downstream_count == 0 %}—{% else %}{{ invite.downstream_count }} downstream{% endif %}</td>
+                                <td>
+                                    <div>{{ invite.impact_summary }}</div>
+                                    {% if invite.revoke_reason != "" %}
+                                        <div class="muted">Reason: {{ invite.revoke_reason }}</div>
+                                    {% endif %}
+                                </td>
+                                <td>{{ invite.expires_at }}</td>
+                                <td>{{ invite.note }}</td>
+                                <td>
+                                    {% if invite.revoked %}
+                                        <span class="muted">revoked</span>
+                                    {% else %}
+                                        <form method="post" action="/admin/invites/{{ invite.code }}/revoke">
+                                            <input type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                                            <input type="text" name="reason" maxlength="120" placeholder="compromised code" />
+                                            <button type="submit">Revoke future use</button>
+                                        </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

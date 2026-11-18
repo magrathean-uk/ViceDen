@@ -1,0 +1,10 @@
+[Unit]
+Description=Poll for ViceDen deploy releases
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=2min
+Unit=viceden-deploy-poll.service
+
+[Install]
+WantedBy=timers.target

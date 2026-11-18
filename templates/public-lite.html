@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ public.theme }}">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ViceDen is an invite-only text forum for community discussion." />
+    <meta name="robots" content="index,follow" />
+    <meta property="og:site_name" content="ViceDen" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="ViceDen" />
+    <meta property="og:description" content="Invite-only text forum for community discussion." />
+    <title>{% block title %}ViceDen{% endblock %}</title>
+    <link rel="icon" href="/assets/viceden-favicon.svg?v=20260507u5" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/viceden-public.css?v=20260507u5">
+    <link rel="stylesheet" href="/assets/viceden-motion.css?v=20260507u5">
+</head>
+<body class="shell-public">
+    <div class="public-frame public-shell">
+        <header class="public-topbar">
+            <a class="public-brand" href="{% if public.current_user.is_authenticated %}/{% else %}/login{% endif %}">
+                <span class="public-brand-mark">#</span>
+                <span class="public-brand-copy">
+                    <span class="public-brand-title">ViceDen</span>
+                    <span class="public-brand-note">Closed community</span>
+                </span>
+            </a>
+
+            <nav class="public-nav">
+                <a href="/guide">Guide</a>
+                <a href="/rules">Rules</a>
+                <a href="/privacy">Privacy</a>
+                {% if public.current_user.is_authenticated %}
+                    <a href="/">Forum</a>
+                    <a href="/profile">Profile</a>
+                {% else %}
+                    <a href="/register">Register</a>
+                    <a href="/login">Login</a>
+                {% endif %}
+            </nav>
+        </header>
+
+        <main class="public-main">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

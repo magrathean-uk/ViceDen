@@ -1,0 +1,102 @@
+## viceden
+
+# This Cargo.toml defines the Rust workspace for the VICEDEN forum prototype.  The
+# project uses the Axum web framework and SQLx for asynchronous PostgreSQL
+# access. Direct dependency major lines are deliberate. Follow the dependency
+# review policy in docs/development/operations.md, document non-obvious additions in canonical
+# repo docs, and run the full gate after dependency changes.
+
+[package]
+name = "viceden"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.86"
+authors = ["MAGRATHEAN UK LTD"]
+description = "Invite-based text forum with moderation, backed by PostgreSQL."
+license = "Apache-2.0"
+publish = false
+
+[dependencies]
+# HTTP server / routing framework
+axum = "0.8.9"
+
+# Tokio is the asynchronous runtime used by Axum and SQLx.  The `full`
+# feature enables the complete set of Tokio functionality (TCP, time, etc.).
+tokio = { version = "1.53.1", features = ["full"] }
+
+# SQLx provides a compile‑time verified interface to PostgreSQL.  We enable
+# the `postgres` feature for the PostgreSQL driver, and `runtime-tokio` for
+# async support.  The `macros` feature allows us to use the `query!` macro
+# with compile‑time checked SQL statements.
+# default-features = false drops the bundled mysql + sqlite backends
+# (and their transitive `rsa 0.9` dep, which carries an unfixable
+# Marvin-attack timing sidechannel — RUSTSEC-2023-0071). Viceden is
+# Postgres-only, so we never use them.
+sqlx = { version = "0.9.0", default-features = false, features = ["postgres", "runtime-tokio", "macros", "migrate", "uuid", "chrono", "json", "tls-rustls-ring-webpki"] }
+
+# Serde for serialization/deserialization of JSON and configuration structs.
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+
+# Askama is a template engine that compiles templates to Rust functions.
+# We use it to render server‑side HTML pages for the forum.  Askama
+# generates zero‑alloc HTML and integrates with Axum via an `IntoResponse`.
+askama = "0.16.1"
+anyhow = "1.0.104"
+toml = "1.1.6"
+ammonia = "4.2.0"
+pulldown-cmark = "0.13.4"
+
+# Config provides layered configuration loading (from files, environment
+# variables, etc.).  This allows easy management of secrets (database URL,
+# secrets) without hard‑coding them in the codebase.
+config = "0.15.26"
+
+# uuid is used to generate unique identifiers for users and threads.
+uuid = { version = "1.26.1", features = ["v4", "serde"] }
+
+# chrono handles date/time fields.  The `serde` feature enables
+# serialization/deserialization for config and API responses.
+chrono = { version = "0.4.45", features = ["serde"] }
+
+# tower is Axum's underlying service stack; we depend on it for timeouts
+# and middleware.  Additional middleware (such as rate limiting) can be
+# layered on top later.
+tower = { version = "0.5", features = ["timeout", "util"] }
+tower-http = { version = "0.7.1", features = ["trace", "fs"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+# thiserror provides ergonomic error definitions with automatic
+# implementation of the `std::error::Error` trait.  Using this crate
+# simplifies error handling in a project with multiple subsystems (db,
+# authentication, templating).
+thiserror = "2.0.21"
+sha2 = "0.11.0"
+hmac = "0.13.0"
+hex = "0.4"
+
+# Password hashing for public-beta username/password auth.
+argon2 = "0.6.0"
+# OS randomness for password salts, sessions, PATs, and invite codes.
+getrandom = "0.4.0"
+
+# HTTP client for the Anthropic classifier (M1+M2 spec §4).
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls"] }
+
+# async-trait for the ContentClassifier trait (M1+M2 spec §4).
+async-trait = "0.1.92"
+
+# IP / CIDR parsing for trusted-proxy resolution (M1+M2 spec §5).
+ipnet = "2.12.2"
+
+# Optionally you can pull in webauthn-rs for passkey registration and
+# authentication.  It is commented out here but referenced in docs for
+# future implementation.  If enabling this crate ensure the MPL‑2.0
+# license is compatible with your deployment.
+# webauthn-rs = { version = "0.5.4", features = ["axum"] }
+
+[dev-dependencies]
+tokio = { version = "1.53.1", features = ["full"] }
+proptest = "1.11.0"
+libc = "0.2.189"

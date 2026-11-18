@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ chrome.theme }}">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="ViceDen is an invite-only text forum for community discussion." />
+    <meta name="robots" content="noindex,follow" />
+    <meta property="og:site_name" content="ViceDen" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="ViceDen" />
+    <meta property="og:description" content="Invite-only text forum for community discussion." />
+    <title>{% block title %}ViceDen{% endblock %}</title>
+    <link rel="icon" href="/assets/viceden-favicon.svg?v=20260509u1" type="image/svg+xml">
+    <link rel="stylesheet" href="/assets/viceden-app.css?v=20260509u1">
+    <link rel="stylesheet" href="/assets/viceden-motion.css?v=20260509u1">
+</head>
+<body class="shell-app">
+    <div class="app-shell">
+        <div class="app-frame">
+            <aside class="app-sidebar" aria-label="Primary navigation">
+                <div class="sidebar-brand">
+                    <div class="sidebar-brand-mark">#</div>
+                    <div class="sidebar-brand-copy">ViceDen</div>
+                </div>
+
+                <div class="sidebar-primary">
+                    {% if chrome.active_board_slug != "" %}
+                        <a class="primary-link" href="/b/{{ chrome.active_board_slug }}#new-thread-form">
+                            <span class="primary-link-mark">+</span>
+                            <span>New thread</span>
+                            <span class="primary-link-key">N</span>
+                        </a>
+                    {% else %}
+                        {% for board in chrome.boards %}
+                            {% if loop.first %}
+                                <a class="primary-link" href="/b/{{ board.slug }}#new-thread-form">
+                                    <span class="primary-link-mark">+</span>
+                                    <span>New thread</span>
+                                    <span class="primary-link-key">N</span>
+                                </a>
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div class="sidebar-scroll">
+                    <section class="sidebar-section">
+                        <div class="sidebar-label">Browse</div>
+                        <div class="nav-list">
+                            <a class="nav-link" data-route="/" href="/">
+                                <span class="nav-main">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/></svg>
+                                    <span class="nav-label-text">Home</span>
+                                </span>
+                                <span class="nav-end">⌘H</span>
+                            </a>
+                            {% if chrome.active_board_slug != "" %}
+                                <a class="nav-link" href="/b/{{ chrome.active_board_slug }}?sort=hot">
+                                    <span class="nav-main">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s3 3 3 6a3 3 0 0 1-6 0c0-1.4.8-2.7 1.7-3.8"/><path d="M8.5 12.5A4.5 4.5 0 1 0 16 16c0-2.6-2-4.3-3.1-5.4"/></svg>
+                                        <span class="nav-label-text">Trending</span>
+                                    </span>
+                                </a>
+                                <a class="nav-link" href="/b/{{ chrome.active_board_slug }}?sort=new">
+                                    <span class="nav-main">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                                        <span class="nav-label-text">Latest</span>
+                                    </span>
+                                </a>
+                                <a class="nav-link" href="/b/{{ chrome.active_board_slug }}?sort=unanswered">
+                                    <span class="nav-main">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 1 1 5.8 1c0 2-2.9 2-2.9 4"/><path d="M12 17h.01"/></svg>
+                                        <span class="nav-label-text">Unanswered</span>
+                                    </span>
+                                </a>
+                            {% else %}
+                                <a class="nav-link" href="/">
+                                    <span class="nav-main">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3s3 3 3 6a3 3 0 0 1-6 0c0-1.4.8-2.7 1.7-3.8"/><path d="M8.5 12.5A4.5 4.5 0 1 0 16 16c0-2.6-2-4.3-3.1-5.4"/></svg>
+                                        <span class="nav-label-text">Trending</span>
+                                    </span>
+                                </a>
+                                <a class="nav-link" href="/">
+                                    <span class="nav-main">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                                        <span class="nav-label-text">Latest</span>
+                                    </span>
+                                </a>
+                                <a class="nav-link" href="/">
+                                    <span class="nav-main">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 1 1 5.8 1c0 2-2.9 2-2.9 4"/><path d="M12 17h.01"/></svg>
+                                        <span class="nav-label-text">Unanswered</span>
+                                    </span>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </section>
+
+                    <section class="sidebar-section">
+                        <div class="sidebar-label">Subscribed boards</div>
+                        {% if chrome.subscribed_boards.is_empty() %}
+                            <div class="sidebar-mini">Nothing yet</div>
+                        {% else %}
+                            <div class="board-nav">
+                                <div class="nav-list">
+                                    {% for item in chrome.subscribed_boards %}
+                                        {% if loop.index <= 2 %}
+                                            <a class="board-link{% if chrome.active_board_slug == item.slug %} is-active{% endif %}" href="/b/{{ item.slug }}">
+                                                <span class="board-main">
+                                                    <span class="board-slug">/{{ item.slug }}</span>
+                                                </span>
+                                                <span class="board-count">{{ item.thread_count }}</span>
+                                            </a>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </section>
+
+                    <section class="sidebar-section">
+                        <div class="sidebar-label">Boards</div>
+                        <div class="board-nav">
+                            <div class="nav-list">
+                                {% for board in chrome.boards %}
+                                    <a class="board-link{% if chrome.active_board_slug == board.slug %} is-active{% endif %}" href="/b/{{ board.slug }}">
+                                        <span class="board-main">
+                                            <span class="board-slug">/{{ board.slug }}</span>
+                                        </span>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </section>
+
+                    {% if chrome.current_user.role == "founder" %}
+                        <section class="sidebar-section">
+                            <div class="sidebar-label">Admin</div>
+                            <div class="nav-list">
+                                <a class="nav-link" href="/admin/users">
+                                    <span class="nav-main">
+                                        <span class="nav-label-text">Users</span>
+                                    </span>
+                                </a>
+                                <a class="nav-link" href="/admin/reports">
+                                    <span class="nav-main">
+                                        <span class="nav-label-text">Reports</span>
+                                    </span>
+                                </a>
+                                <a class="nav-link" href="/admin/moderation-events">
+                                    <span class="nav-main">
+                                        <span class="nav-label-text">Audit</span>
+                                    </span>
+                                </a>
+                                <a class="nav-link" href="/admin/metrics">
+                                    <span class="nav-main">
+                                        <span class="nav-label-text">Metrics</span>
+                                    </span>
+                                </a>
+                            </div>
+                        </section>
+                    {% endif %}
+                </div>
+
+                <div class="account-menu" data-account-menu>
+                    <button class="account-card" type="button" aria-label="Open account menu" aria-haspopup="menu" aria-expanded="false" data-account-menu-button>
+                        <div class="account-avatar"><span>{{ chrome.current_user.handle }}</span></div>
+                        <div class="account-copy">
+                            <div class="account-name">@{{ chrome.current_user.handle }}</div>
+                            <div class="account-role">{{ chrome.current_user.role }}</div>
+                        </div>
+                    </button>
+                    <div class="account-menu-panel" role="menu" hidden data-account-menu-panel>
+                        <a class="account-menu-action" href="/profile" role="menuitem">Profile</a>
+                        <a class="account-menu-action" href="/saved" role="menuitem">Saved</a>
+                        <a class="account-menu-action" href="/hidden" role="menuitem">Hidden</a>
+                        <form method="post" action="/logout">
+                            <input class="hidden-input" type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                            <input class="hidden-input" type="hidden" name="return_to" value="/login" />
+                            <button class="account-menu-action" type="submit" role="menuitem">Log out</button>
+                        </form>
+                    </div>
+                </div>
+            </aside>
+
+            <section class="app-main" aria-label="Forum content">
+                <header class="app-topbar">
+                    <div class="topbar-crumbs">
+                        {% block topbar_crumbs %}
+                            <span class="crumb-current">Home</span>
+                        {% endblock %}
+                    </div>
+
+                    <div class="topbar-actions">
+                        <form class="topbar-search" method="get" action="/search">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                            <input type="search" name="q" placeholder="Search threads..." aria-label="Search threads" />
+                            <span class="search-key">⌘K</span>
+                        </form>
+
+                        <button class="topbar-hamburger" type="button" aria-label="Open navigation" data-drawer-toggle>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                 stroke-linecap="round" aria-hidden="true">
+                                <path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/>
+                            </svg>
+                        </button>
+
+                        <form method="post" action="/profile" class="topbar-density-form" data-density-form>
+                            <input type="hidden" name="csrf" value="{{ chrome.csrf_token }}" />
+                            <input type="hidden" name="theme" value="{{ chrome.theme }}" />
+                            <input type="hidden" name="compactness" value="{{ chrome.next_compactness }}" />
+                            <button class="icon-button" type="submit" aria-label="Cycle density"
+                                    data-density-toggle data-current-density="{{ chrome.compactness }}">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+                                     stroke-linecap="round" aria-hidden="true">
+                                    <path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h12"/>
+                                </svg>
+                            </button>
+                        </form>
+
+                        <a class="icon-button" href="/notifications" aria-label="Notifications">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"/><path d="M10 17a2 2 0 0 0 4 0"/></svg>
+                            <span class="icon-badge" data-live-notification-badge{% if chrome.notification_count == 0 %} hidden{% endif %}>{{ chrome.notification_count }}</span>
+                        </a>
+
+                    </div>
+                </header>
+
+                <div class="main-scroll">
+                    <div class="page-shell">
+                        {% block content %}{% endblock %}
+                    </div>
+                </div>
+            </section>
+
+            <aside class="app-inspector">
+                {% block inspector_saved %}
+                    <section class="rail-section">
+                        <div class="rail-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21 12 17 5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                            <span>Saved threads</span>
+                        </div>
+                        {% if chrome.saved_threads.is_empty() %}
+                            <div class="rail-empty">Nothing saved</div>
+                        {% else %}
+                            <div class="rail-list">
+                                {% for item in chrome.saved_threads %}
+                                    {% if loop.index <= 3 %}
+                                        <a class="rail-item" href="/t/{{ item.thread_id }}">
+                                            <div class="rail-item-title">{{ item.title }}</div>
+                                            <div class="rail-item-meta">
+                                                <span>{{ item.board_name }}</span>
+                                            </div>
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </section>
+                {% endblock %}
+
+                {% block inspector_recent %}
+                    <section class="rail-section">
+                        <div class="rail-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+                            <span>Recent activity</span>
+                        </div>
+                        {% if chrome.recent_posts.is_empty() %}
+                            <div class="rail-empty">Nothing recent</div>
+                        {% else %}
+                            <div class="rail-list">
+                                {% for item in chrome.recent_posts %}
+                                    {% if loop.index <= 4 %}
+                                        <a class="rail-item" href="{{ item.url }}">
+                                            <div class="rail-item-title">{{ item.thread_title }}</div>
+                                            <div class="rail-item-meta">
+                                                <span>/{{ item.board_slug }}</span>
+                                                <span class="dot">·</span>
+                                                <span><time class="local-datetime" data-utc="{{ item.created_at.iso }}">{{ item.created_at.display }}</time></span>
+                                            </div>
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </section>
+                {% endblock %}
+
+                {% block inspector_notifications %}
+                    <section class="rail-section">
+                        <div class="rail-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"/><path d="M10 17a2 2 0 0 0 4 0"/></svg>
+                            <span>Notifications</span>
+                        </div>
+                        {% if chrome.notifications.is_empty() %}
+                            <div class="rail-empty">Nothing queued</div>
+                        {% else %}
+                            <div class="rail-list">
+                                {% for item in chrome.notifications %}
+                                    {% if loop.index <= 4 %}
+                                        <a class="rail-item rail-notice{% if item.is_read %}{% else %} is-unread{% endif %}" href="{% if item.has_thread_link %}{{ item.thread_url }}{% else %}/notifications{% endif %}">
+                                            <div class="rail-notice-icon">
+                                                {% if item.kind == "mention" %}
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M16.5 19.4A8 8 0 1 1 20 12v1a2.5 2.5 0 0 1-5 0v-1"/></svg>
+                                                {% elif item.kind == "post removed" %}
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                                                {% elif item.kind == "report" %}
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 6 5v6c0 5 2.8 8 6 10 3.2-2 6-5 6-10V5l-6-2z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                                                {% elif item.kind == "moderation" %}
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 6 5v6c0 5 2.8 8 6 10 3.2-2 6-5 6-10V5l-6-2z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+                                                {% else %}
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2a2 2 0 0 1-.6 1.4L4 17h5"/><path d="M10 17a2 2 0 0 0 4 0"/></svg>
+                                                {% endif %}
+                                                {% if item.is_read %}{% else %}<span class="rail-notice-dot"></span>{% endif %}
+                                            </div>
+                                            <div>
+                                                <div class="rail-item-title">{{ item.message }}</div>
+                                                <div class="rail-item-meta">
+                                                    <span>{{ item.actor }}</span>
+                                                    <span class="dot">·</span>
+                                                    <span><time class="local-datetime" data-utc="{{ item.created_at.iso }}">{{ item.created_at.display }}</time></span>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </section>
+                {% endblock %}
+            </aside>
+        </div>
+    </div>
+    <script src="/assets/viceden-ui.js?v=20260509u1" defer></script>
+</body>
+</html>

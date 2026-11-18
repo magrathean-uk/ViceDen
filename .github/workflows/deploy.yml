@@ -1,0 +1,80 @@
+name: Build And Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  RUST_TOOLCHAIN: stable
+  RELEASE_TAG: deploy-main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: viceden
+          POSTGRES_PASSWORD: viceden
+          POSTGRES_DB: viceden_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      VICEDEN_DATABASE__URL: postgres://viceden:viceden@127.0.0.1:5432/viceden_test
+      DATABASE_URL: postgres://viceden:viceden@127.0.0.1:5432/viceden_test
+      ANTHROPIC_API_KEY: dummy-for-tests
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Wait for Postgres
+        run: |
+          for _ in {1..30}; do
+            if pg_isready -h 127.0.0.1 -p 5432; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+
+      - name: Build release artifacts
+        run: ./scripts/release.sh
+
+      - name: Locate deploy assets
+        run: |
+          target_dir="$(cargo metadata --format-version 1 --no-deps | sed -n 's/.*"target_directory":"\([^"]*\)".*/\1/p')"
+          echo "RELEASE_DIST=$target_dir/release/dist" >> "$GITHUB_ENV"
+
+      - name: Move rolling release tag
+        run: |
+          git tag -f "$RELEASE_TAG" "$GITHUB_SHA"
+          git push origin "refs/tags/$RELEASE_TAG" --force
+
+      - name: Publish rolling release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          target_commitish: ${{ github.sha }}
+          name: ViceDen Production Deploy
+          prerelease: true
+          make_latest: false
+          generate_release_notes: false
+          overwrite_files: true
+          files: ${{ env.RELEASE_DIST }}/*

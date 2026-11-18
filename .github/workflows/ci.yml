@@ -1,0 +1,75 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  RUSTFLAGS: -D warnings
+  # The runner has ~14 GB free. Full debuginfo for every integration-test binary, plus incremental
+  # artifacts, filled it ("No space left on device", which also surfaced as an lld SIGBUS).
+  CARGO_PROFILE_DEV_DEBUG: line-tables-only
+  CARGO_INCREMENTAL: "0"
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: viceden
+          POSTGRES_PASSWORD: viceden
+          POSTGRES_DB: viceden_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      VICEDEN_DATABASE__URL: postgres://viceden:viceden@127.0.0.1:5432/viceden_test
+      DATABASE_URL: postgres://viceden:viceden@127.0.0.1:5432/viceden_test
+      ANTHROPIC_API_KEY: dummy-for-tests
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Wait for Postgres
+        run: |
+          for _ in {1..30}; do
+            if pg_isready -h 127.0.0.1 -p 5432; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+
+      - name: cargo fmt
+        run: cargo fmt --check
+
+      - name: cargo clippy
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+      - name: cargo test
+        run: cargo test --all-features
+
+      # PG-required integration tests. They are gated behind `#[ignore]` so
+      # the default `cargo test` run stays fast on machines without Postgres,
+      # but CI has the service container above and must exercise them.
+      # `tests/common/mod.rs::shared_pool` runs `sqlx::migrate!("./migrations")`
+      # against the CI Postgres, so no separate sqlx-cli step is needed.
+      - name: cargo test (PG-required, --ignored)
+        run: cargo test --all-features -- --ignored --test-threads=1

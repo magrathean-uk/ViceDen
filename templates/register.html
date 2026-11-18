@@ -1,0 +1,69 @@
+{% extends "auth-base.html" %}
+
+{% block title %}Register · ViceDen{% endblock %}
+
+{% block auth_content %}
+<section class="auth-card">
+    <div class="auth-stack">
+        <div class="auth-kicker">Register</div>
+        <h1 class="auth-title">Claim your handle</h1>
+        <div class="auth-copy">
+            Invite-only. No email flow. By creating an account you
+            attest that you are at least 18 and accept the rules.
+        </div>
+
+        {% if invite_title != "" %}
+            <div class="auth-copy">
+                <strong>{{ invite_title }}</strong>
+                <span>{{ invite_copy }}</span>
+            </div>
+        {% endif %}
+
+        <form class="form-grid" method="post" action="/register">
+            <input class="hidden-input" type="hidden" name="csrf"      value="{{ csrf_token }}" />
+            <input class="hidden-input" type="hidden" name="return_to" value="{{ return_to }}" />
+            <input class="hidden-input" type="hidden" name="code"      value="{{ code }}" />
+
+            <div class="split-two">
+                <div class="mini-grid">
+                    <label for="handle">Handle</label>
+                    <input type="text" id="handle" name="handle"
+                           minlength="3" maxlength="24"
+                           pattern="[a-z0-9_-]+"
+                           autocomplete="username" required />
+                </div>
+
+                <div class="mini-grid">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password"
+                           minlength="8" autocomplete="new-password" required />
+                </div>
+            </div>
+
+            <div class="mini-grid">
+                <label for="dob">Date of birth</label>
+                <input type="date" id="dob" name="dob" required />
+            </div>
+
+            <label class="auth-checkbox">
+                <input type="checkbox" name="confirm_18" value="yes" required />
+                I am at least 18 years old.
+            </label>
+
+            <label class="auth-checkbox">
+                <input type="checkbox" name="confirm_rules" value="yes" required />
+                I have read and accept the <a href="/rules">rules</a>.
+            </label>
+
+            {% if error != "" %}
+                <div class="auth-error">{{ error }}</div>
+            {% endif %}
+
+            <div class="auth-actions">
+                <button type="submit">Create account</button>
+                <a class="auth-link is-ghost" href="/login">Login</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

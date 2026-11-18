@@ -1,0 +1,193 @@
+:root {
+    --motion-fast: 120ms;
+    --motion-med: 180ms;
+    --motion-slow: 260ms;
+    --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+    --focus-ring: 0 0 0 3px rgba(130, 170, 255, 0.22);
+}
+
+:where(a, button, input, textarea, select):focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+}
+
+:where(
+    a,
+    button,
+    .button-link,
+    .icon-button,
+    .account-card,
+    .account-menu-action,
+    .primary-link,
+    .primary-button,
+    .ghost-button,
+    .board-tab,
+    .nav-link,
+    .board-link,
+    .rail-item,
+    .feed-row,
+    .list-row,
+    .item-card,
+    .public-button,
+    .public-nav a,
+    .auth-link
+) {
+    transform: translate3d(0, 0, 0);
+    transition:
+        opacity var(--motion-fast) var(--motion-ease),
+        transform var(--motion-fast) var(--motion-ease),
+        border-color var(--motion-fast) var(--motion-ease),
+        background-color var(--motion-fast) var(--motion-ease),
+        color var(--motion-fast) var(--motion-ease);
+}
+
+:where(
+    .button-link,
+    .icon-button,
+    .account-card,
+    .account-menu-action,
+    .primary-link,
+    .primary-button,
+    .ghost-button,
+    .board-link,
+    .nav-link,
+    .rail-item,
+    .feed-row,
+    .list-row,
+    .item-card,
+    .public-button,
+    .public-nav a,
+    .auth-link
+):hover,
+:where(
+    .button-link,
+    .icon-button,
+    .account-card,
+    .account-menu-action,
+    .primary-link,
+    .primary-button,
+    .ghost-button,
+    .board-link,
+    .nav-link,
+    .rail-item,
+    .feed-row,
+    .list-row,
+    .item-card,
+    .public-button,
+    .public-nav a,
+    .auth-link
+):focus-visible {
+    transform: translate3d(0, -1px, 0);
+    will-change: transform;
+}
+
+:where(
+    button,
+    .button-link,
+    .icon-button,
+    .primary-button,
+    .ghost-button,
+    .public-button,
+    .auth-link
+):active {
+    transform: translate3d(0, 0, 0) scale(0.985);
+}
+
+.feed-surface,
+.entry-surface,
+.surface-box,
+.panel,
+.page-head,
+.compose-panel,
+.public-panel,
+.auth-window {
+    animation: vd-surface-in var(--motion-med) var(--motion-ease) both;
+}
+
+.surface-box,
+.feed-surface,
+.entry-surface,
+.compose-panel,
+.public-panel,
+.public-card,
+.auth-window,
+.stat-card,
+.item-card {
+    contain: paint;
+}
+
+@supports (content-visibility: auto) {
+    .feed-row,
+    .board-screen .board-row,
+    .list-row,
+    .item-card,
+    .rail-item,
+    .public-card {
+        content-visibility: auto;
+        contain-intrinsic-size: auto 96px;
+    }
+}
+
+.entry-item:target,
+.thread-post:target {
+    animation: vd-target-pulse 1400ms var(--motion-ease) 1;
+    border-color: rgba(130, 170, 255, 0.52);
+}
+
+.mention {
+    padding: 0 0.2em;
+    border-radius: 0.35em;
+    background: rgba(130, 170, 255, 0.1);
+    color: var(--foreground);
+    font-family: var(--font-mono);
+    font-size: 0.95em;
+}
+
+.composer-tools {
+    display: grid;
+    gap: 0.6rem;
+}
+
+.composer-preview {
+    white-space: pre-wrap;
+    border: 1px solid var(--border);
+    border-radius: var(--radius, 4px);
+    padding: 0.75rem;
+    background: var(--card-quiet, var(--surface-soft));
+    color: var(--foreground-soft);
+}
+
+@keyframes vd-surface-in {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 4px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes vd-target-pulse {
+    0% {
+        background-color: rgba(130, 170, 255, 0.16);
+    }
+    100% {
+        background-color: transparent;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.001ms !important;
+    }
+
+    :where(a, button, .button-link, .icon-button, .account-card, .feed-row, .list-row, .item-card) {
+        transform: none !important;
+    }
+}
